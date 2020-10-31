@@ -58,6 +58,8 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def selectDev(self, event):
     self.active_dev = self.m_dev_choice.GetSelection()
     self.rightP.dev = self.mainW.devs[self.active_dev]
+
+    # Fill list with pin description
     self.m_pinList.DeleteAllItems()
     self.itemDataMap = [] 
     index = 0
@@ -72,6 +74,13 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.m_pinList.SetItemData(index, key)
       self.itemDataMap.append([data['pin_id'], data['name'], pin_type])
       index += 1
+    
+    # Add description in bottom status bar
+    self.mainW.m_statusBar1.SetStatusText(', '.join([
+      self.mainW.devs[self.active_dev].name,
+      self.mainW.devs[self.active_dev].package
+    ])) 
+    # Refresh pin image
     self.rightP.Refresh()
 
 class RightPanel(wx.Panel):
@@ -231,14 +240,10 @@ class Mywin(wx.Frame):
  
     # Use wx.ArtProvider for default icons
     open_ico = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, (16,16))
-    openTool = self.toolbar.AddSimpleTool(wx.ID_ANY, open_ico, "Save", "Saves the Current Worksheet")
+    openTool = self.toolbar.AddSimpleTool(wx.ID_ANY, open_ico, "Open", "Add BSDL definition file")
     self.Bind(wx.EVT_MENU, self.loadFile, openTool)
     
     self.toolbar.AddSeparator()
- 
-    print_ico = wx.ArtProvider.GetBitmap(wx.ART_PRINT, wx.ART_TOOLBAR, (16,16))
-    printTool = self.toolbar.AddSimpleTool(wx.ID_ANY, print_ico, "Print", "Sends Timesheet to Default Printer")
-    # self.Bind(wx.EVT_MENU, self.onPrint, printTool)
  
     # This basically shows the toolbar 
     self.toolbar.Realize()
@@ -252,6 +257,7 @@ class Mywin(wx.Frame):
     
   #----------------------------------------------------------------------
   def loadFile(self, event):
+    # BSDL file loading dialog
     openFileDialog = wx.FileDialog(self, "Open", "", "", 
                                     "BSDL files (*.bsdl, *.bsd)|*.bsdl;*.bsd|All files (*.*)|*.*", 
                                     wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
@@ -268,6 +274,7 @@ class Mywin(wx.Frame):
     openFileDialog.Destroy()
 
   def loadBSDL(self, file):
+    # Parse BSDL file
     try:
       ast = self.parser.parseBSDL(file)
 

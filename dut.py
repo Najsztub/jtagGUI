@@ -18,7 +18,6 @@ class DUT:
 
     # For searching pins by port
     self.port_dict = [p['name'] for p in plist]
-    
 
     # Save as dict of dicts
     self.pins = dict([(p[0], p[1]) for p in enumerate(plist)])
@@ -39,4 +38,5 @@ class DUT:
       self.pins[p][key] = value
   
   def prepareBSR(self):
+    # TODO: Parse BSR
     pass
