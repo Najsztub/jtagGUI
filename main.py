@@ -8,18 +8,18 @@ import re
 import panels
 from dut import DUT
 import bsdl_parser
+import urjtag_mock as urjtag
+from conf_tank import BSDLtank
 
 #######################################################################
-
-
-
-#inherit from the MainFrame created in wxFormBuilder and create janelaPrincipal
+# Override wxFormBuilder BottomPanel class
 class BottomPanel(panels.BottomPanel):
   #constructor
   def __init__(self,parent):
     #initialize parent class
     panels.BottomPanel.__init__(self, parent)
 
+#######################################################################
 # Override wxFormBuilder LeftPanel class
 class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   #constructor
@@ -83,6 +83,58 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     # Refresh pin image
     self.rightP.Refresh()
 
+#######################################################################
+# Override BSDL repo dialog
+class BSDLRepo(panels.BSDLRepo):
+  #constructor
+  def __init__(self,parent):
+    panels.BSDLRepo.__init__(self, parent)
+    self.parent = parent
+    self.bsdl_repo = parent.bsdl_repo
+    # Load data
+    self.data = self.bsdl_repo.getTab()
+    # Fill columns
+    for row in self.data:
+      self.m_bsdl_data.AppendItem(row[1:6])
+
+  def addBSDL( self, event ):
+       # BSDL file loading dialog
+    openFileDialog = wx.FileDialog(self, "Open", "", "", 
+                                    "BSDL files (*.bsdl, *.bsd)|*.bsdl;*.bsd|All files (*.*)|*.*", 
+                                    wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+    if openFileDialog.ShowModal() == wx.ID_CANCEL:
+      return     # the user changed their mind
+    # Proceed loading the file chosen by the user
+    pathname = openFileDialog.GetPath()
+    ast = None
+    try:
+      ast = self.parent.parser.parseBSDL(pathname)
+    except IOError:
+      wx.LogError("Cannot open file '%s'." % pathname)
+      self.parent.log("Cannot open file '%s'." % pathname)
+    except tatsu.exceptions.FailedToken:
+      self.parent.log(', '.join(["BSDL error parsing ",  pathname]))
+    if ast is not None:
+      dev = DUT(ast)
+      # Upload info to DB
+      ret_data = self.bsdl_repo.addBSDL(dev.getID(), name=dev.name, source=pathname, ast=ast)
+      # Add to self.data and table
+      self.data.append(ret_data)
+      self.m_bsdl_data.AppendItem(ret_data[1:6])
+
+    openFileDialog.Destroy()
+
+  def dropBSDL( self, event ):
+    row = self.m_bsdl_data.GetSelectedRow()
+    if row != wx.NOT_FOUND:
+      self.bsdl_repo.delBSDL(self.data[row][0])
+    self.m_bsdl_data.DeleteItem(row)
+    del self.data[row]
+
+
+
+#######################################################################
+# Define Right panel class
 class RightPanel(wx.Panel):
   """"""
   #----------------------------------------------------------------------
@@ -169,15 +221,20 @@ class RightPanel(wx.Panel):
         # Draw pin
         dc.DrawRectangle(border + math.ceil(rec_b * i), border + math.floor(rec_b* j), math.floor(rec_b), math.floor(rec_b)) 
 
-
+#######################################################################
+# Main window class
 class Mywin(wx.Frame): 
-
   def __init__(self, parent, title, parser = None): 
-    super(Mywin, self).__init__(parent, title = title,size = (640,480))  
+    super(wx.Frame, self).__init__(parent, title = title,size = (640,480))  
 
     self.parser = parser
     self.devs = []
-    self.InitUI() 
+
+    # Add JTAG chain container
+    self.chain = None
+
+    # Add BSDL Repo
+    self.bsdl_repo = BSDLtank('bsdl/bsdl_repo.sqlite')
 
     self.PIN_COLS = {
       'vcc': wx.Colour(255,0,0),
@@ -188,9 +245,6 @@ class Mywin(wx.Frame):
       'io_0': wx.Colour(200,200,200),
       'io_z': wx.Colour(128, 128, 128)
     }
-  
-
-  def InitUI(self): 
 
     # Split panels
     splitMain = wx.SplitterWindow(self)
@@ -221,10 +275,15 @@ class Mywin(wx.Frame):
     sizer.Add(splitMain, 1, wx.EXPAND)
     self.SetSizer(sizer)
 
+    # wxFormBuilder generated code
+
+    self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+
     self.m_statusBar1 = self.CreateStatusBar( 2, wx.STB_SIZEGRIP, wx.ID_ANY )
     self.m_menubar1 = wx.MenuBar( 0 )
     self.m_menu1 = wx.Menu()
     self.m_load = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Load BSDL", wx.EmptyString, wx.ITEM_NORMAL )
+    self.m_load.SetBitmap( wx.NullBitmap )
     self.m_menu1.Append( self.m_load )
 
     self.m_exit = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"E&xit", wx.EmptyString, wx.ITEM_NORMAL )
@@ -232,29 +291,50 @@ class Mywin(wx.Frame):
 
     self.m_menubar1.Append( self.m_menu1, u"File" )
 
+    self.m_menu2 = wx.Menu()
+    self.m_menubar1.Append( self.m_menu2, u"Chain" )
+
+    self.m_menu3 = wx.Menu()
+    self.m_bsld_repo = wx.MenuItem( self.m_menu3, wx.ID_ANY, u"BSDL repository", wx.EmptyString, wx.ITEM_NORMAL )
+    self.m_menu3.Append( self.m_bsld_repo )
+
+    self.m_menubar1.Append( self.m_menu3, u"Tools" )
+
     self.SetMenuBar( self.m_menubar1 )
 
-    #-----------------------
-    self.toolbar = self.CreateToolBar()
-    self.toolbar.SetToolBitmapSize((16,16))  # sets icon size
- 
-    # Use wx.ArtProvider for default icons
-    open_ico = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, (16,16))
-    openTool = self.toolbar.AddSimpleTool(wx.ID_ANY, open_ico, "Open", "Add BSDL definition file")
-    self.Bind(wx.EVT_MENU, self.loadFile, openTool)
-    
-    self.toolbar.AddSeparator()
- 
-    # This basically shows the toolbar 
-    self.toolbar.Realize()
+    self.m_toolbar1 = self.CreateToolBar( wx.TB_HORIZONTAL, wx.ID_ANY )
+    self.m_t_open = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_FILE_OPEN,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Open BSDL file", wx.EmptyString, None )
+
+    self.m_toolbar1.AddSeparator()
+
+    self.m_chain_start = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chin", wx.EmptyString, None )
+
+    self.m_chain_stop = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_CLOSE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Stop JTAG chain", wx.EmptyString, None )
+
+    m_cableChoices = [ u"Select device", u"usbblaster" ]
+    self.m_cable = wx.Choice( self.m_toolbar1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_cableChoices, 0 )
+    self.m_cable.SetSelection( 0 )
+    self.m_toolbar1.AddControl( self.m_cable )
+    self.m_toolbar1.Realize()
+
+
+    self.Centre( wx.BOTH )
 
     # Connect Events
-    self.Bind(wx.EVT_MENU, self.loadFile, id= self.m_load.GetId())
-    self.Bind(wx.EVT_MENU, self.OnExit, id = self.m_exit.GetId() )
+    self.Bind( wx.EVT_MENU, self.loadFile, id = self.m_load.GetId() )
+    self.Bind( wx.EVT_MENU, self.OnExit, id = self.m_exit.GetId() )
+    self.Bind( wx.EVT_MENU, self.editBSDLrepo, id = self.m_bsld_repo.GetId() )
+    self.Bind( wx.EVT_TOOL, self.loadFile, id = self.m_t_open.GetId() )
+    self.Bind( wx.EVT_TOOL, self.attachChain, id = self.m_chain_start.GetId() )
+    self.Bind( wx.EVT_TOOL, self.dropChain, id = self.m_chain_stop.GetId() )
 
-    self.Centre() 
     self.Show(True)
     
+  #----------------------------------------------------------------------
+  def editBSDLrepo(self, event):
+    dlg = BSDLRepo(self)
+    dlg.Show(True)
+  
   #----------------------------------------------------------------------
   def loadFile(self, event):
     # BSDL file loading dialog
@@ -298,6 +378,18 @@ class Mywin(wx.Frame):
     self.devs.append(device)
     # Append device to left panel
     self.leftP.addDev(device)
+
+  def dropChain(self, event):
+    self.chain = None
+  
+  def attachChain(self, event):
+    cid = self.m_cable.GetSelection()
+    if cid <= 0:
+      wx.MessageBox("Please select a UrJTAG cable", caption="Invalid cable",
+              style=wx.OK|wx.CENTRE)
+      return
+    self.chain = urjtag.chain()
+    self.chain.cable(self.m_cable.GetString(cid))
 
   def OnExit(self, evt):
     self.Close(True)  

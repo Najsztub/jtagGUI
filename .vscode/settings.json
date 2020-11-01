@@ -1,7 +1,7 @@
 {
     "python.pythonPath": "c:\\Users\\E7440\\Envs\\sci39\\Scripts\\python.exe",
     "spellright.language": [
-        "pl"
+        "en"
     ],
     "spellright.documentTypes": [
         "markdown",
@@ -16,5 +16,13 @@
     ],
     "python.testing.pytestEnabled": false,
     "python.testing.nosetestsEnabled": false,
-    "python.testing.unittestEnabled": true
+    "python.testing.unittestEnabled": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "${workspaceFolder:jtagGUI}/bsdl/bsdl_repo.sqlite",
+            "name": "BSDL"
+        }
+    ]
 }

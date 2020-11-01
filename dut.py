@@ -37,6 +37,13 @@ class DUT:
     for p in pid:
       self.pins[p][key] = value
   
+  def getID(self):
+    if "idcode_register" not in self.ast["optional_register_description"]:
+      idcode = [''.join(reg["idcode_register"]) for reg in self.ast["optional_register_description"] if "idcode_register" in reg]
+    else:
+      idcode = [''.join(self.ast["optional_register_description"]["idcode_register"])]
+    return idcode[0]
+
   def prepareBSR(self):
     # TODO: Parse BSR
     pass
