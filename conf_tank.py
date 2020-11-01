@@ -61,7 +61,7 @@ class BSDLtank:
     bsdl = c.fetchone()
     ast = None
     if bsdl[5] is not None:
-      ast = json.loads(bsdl[5].decode('utf-8'))
+      ast = json.loads(zlib.decompress(bsdl[5]).decode('utf-8'))
     return {
       'id': bsdl[0],
       'date_add': bsdl[1],
@@ -79,6 +79,18 @@ class BSDLtank:
     for row_id in range(len(bsdl)):
       bsdl[row_id] = list(bsdl[row_id])
       bsdl[row_id][5] = (bsdl[row_id][5] == 1)
+    return bsdl
+
+  def getCodes(self, idcode):
+    c = self.conn.cursor()
+    c.execute('SELECT id, zip_ast FROM bsdl WHERE idcode=? ORDER BY date_add DESC', (idcode, ))
+    bsdl = c.fetchone()
+    # Convert 2nd item to Bool
+    if bsdl is None:
+      return None
+    if bsdl[1] is not None:
+      bsdl = list(bsdl)
+      bsdl[1] = json.loads(zlib.decompress(bsdl[1]).decode('utf-8'))
     return bsdl
 
   def __del__(self):

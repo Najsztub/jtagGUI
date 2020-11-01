@@ -308,7 +308,7 @@ class Mywin(panels.MainFrame):
       ast = self.parser.parseBSDL(file)
 
       dev = DUT(ast)
-      self.addDev(dev)
+      # self.addDev(dev)
       self.m_statusBar1.SetStatusText(file, 1) 
     except tatsu.exceptions.FailedToken:
       self.log(', '.join(["BSDL error parsing ",  file]))  
@@ -320,16 +320,15 @@ class Mywin(panels.MainFrame):
       self.devs[devid].package
     ])) 
 
-  def addDev(self, device):
-    # Log info
-    self.log("Found " + device.name) 
-    # Append device to list
-    self.devs.append(device)
+  def addDevice(self, dev):
+    # Add device to list
+    self.devs.append(dev)
     # Append device to left panel
-    self.leftP.addDev(device)
+    self.leftP.addDev(dev)
 
   def dropChain(self, event):
     self.chain = None
+    self.m_scan_tap.Disable()
   
   def attachChain(self, event):
     cid = self.m_cable.GetSelection()
@@ -339,6 +338,32 @@ class Mywin(panels.MainFrame):
       return
     self.chain = urjtag.chain()
     self.chain.cable(self.m_cable.GetString(cid))
+    self.m_scan_tap.Enable()
+
+  def scanTAP(self, event):
+    # Scan the chain and populate window with found devices
+    self.chain.tap_detect()
+    found_chain = self.chain.len()
+    if found_chain <= 0:
+      self.log("No devices found.")
+      return
+    if found_chain > 1: self.log("Found %s devices." % found_chain)
+    else: self.log("Found %s device." % found_chain)
+    # Get ids and search in DB
+    self.devs = []
+    for devid in range(found_chain):
+      # TODO: Populate app with devices
+      dev_code = self.chain.partid(devid)
+      dev = DUT(idcode=dev_code)
+      # TODO: Search for IDCODE in DB
+      db_bsdl = self.bsdl_repo.getCodes(dev_code)
+      if db_bsdl is not None and db_bsdl[1] is not None:
+        dev.addAST(db_bsdl[1])
+        dev.inner_id = db_bsdl[0]
+      else:
+        self.log("Unknown device IDCODE: %s" % dev_code)
+      # Notice widgets about new device
+      self.addDevice(dev)
 
   def OnExit(self, evt):
     self.Close(True)  

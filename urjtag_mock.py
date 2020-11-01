@@ -27,8 +27,9 @@ class chain:
     self.part(0)
   
   def partid(self, id):
-    idcode = 0b00010001000001010000000011011101
-    return 
+    if id == 0: return '00010001000001010000000011011101'
+    elif id == 1: return '11010001011001010000000011011101'
+    else: return None
     
   def set_trst(self, st):
     pass

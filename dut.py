@@ -5,13 +5,30 @@
 # Cell - BSR cell. Can be associated with Port, but not necessarily
 
 class DUT:
-  def __init__(self, ast):
+  def __init__(self, ast=None, idcode=None):
+    # Create empty placeholders
+    self.inner_id = None
+    self.idcode = None
+    self.name = ''
+    self.package = ''
+
+    self.pins = None
+    self.registers = None
+    self.instructions = None
+
+    if ast is not None:
+      self.addAST(ast)
+    elif idcode is not None:
+      self.idcode = idcode
+
+  def addAST(self, ast):
     self.ast = ast
     
-    # Assign name and package
+    # Assign name, package and ID
     self.name = ''.join(self.ast["component_name"])
     self.package = self.ast["generic_parameter"]["default_device_package_type"]
-    
+    self.idcode = self.getID()
+
     # Create pin dict
     pins = self.ast['device_package_pin_mappings'][0]['pin_map']
     plist = [{'pin_id': pn, 'name': p['port_name']} for p in pins for pn in p['pin_list']]
@@ -31,6 +48,7 @@ class DUT:
     
     # Make pins addressable by pin_id
     self.pin_dict = dict([(p[1]['pin_id'], p[0]) for p in enumerate(plist)])
+
 
   def setPort(self, port, key, value):
     pid = [i for i, x in self.pins.items() if x['name'] == port] 
