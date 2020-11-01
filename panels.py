@@ -95,10 +95,10 @@ class BottomPanel ( wx.Panel ):
 
 
 ###########################################################################
-## Class MyFrame2
+## Class MainFrame
 ###########################################################################
 
-class MyFrame2 ( wx.Frame ):
+class MainFrame ( wx.Frame ):
 
     def __init__( self, parent ):
         wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 640,480 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
@@ -199,11 +199,11 @@ class BSDLRepo ( wx.Dialog ):
         bSizer6.Add( self.m_toolBar2, 0, wx.EXPAND, 5 )
 
         self.m_bsdl_data = wx.dataview.DataViewListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.dataview.DV_MULTIPLE )
-        self.m_bsdl_name = self.m_bsdl_data.AppendTextColumn( u"Name", wx.dataview.DATAVIEW_CELL_ACTIVATABLE, 150, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE|wx.dataview.DATAVIEW_COL_SORTABLE )
-        self.m_bsdl_date_add = self.m_bsdl_data.AppendTextColumn( u"Date added", wx.dataview.DATAVIEW_CELL_INERT, 150, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE|wx.dataview.DATAVIEW_COL_SORTABLE )
-        self.m_bsdl_idcode = self.m_bsdl_data.AppendTextColumn( u"IDCODE", wx.dataview.DATAVIEW_CELL_INERT, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
-        self.m_bsdl_source = self.m_bsdl_data.AppendTextColumn( u"Source", wx.dataview.DATAVIEW_CELL_INERT, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
-        self.m_bsdl_has_ast = self.m_bsdl_data.AppendToggleColumn( u"AST", wx.dataview.DATAVIEW_CELL_INERT, 50, wx.ALIGN_LEFT, 0 )
+        self.m_bsdl_name = self.m_bsdl_data.AppendTextColumn( u"Name", wx.DATAVIEW_CELL_ACTIVATABLE, 150, wx.ALIGN_LEFT, wx.DATAVIEW_COL_RESIZABLE|wx.DATAVIEW_COL_SORTABLE )
+        self.m_bsdl_date_add = self.m_bsdl_data.AppendTextColumn( u"Date added", wx.DATAVIEW_CELL_INERT, 150, wx.ALIGN_LEFT, wx.DATAVIEW_COL_RESIZABLE|wx.DATAVIEW_COL_SORTABLE )
+        self.m_bsdl_idcode = self.m_bsdl_data.AppendTextColumn( u"IDCODE", wx.DATAVIEW_CELL_INERT, -1, wx.ALIGN_LEFT, wx.DATAVIEW_COL_RESIZABLE )
+        self.m_bsdl_source = self.m_bsdl_data.AppendTextColumn( u"Source", wx.DATAVIEW_CELL_INERT, -1, wx.ALIGN_LEFT, wx.DATAVIEW_COL_RESIZABLE )
+        self.m_bsdl_has_ast = self.m_bsdl_data.AppendToggleColumn( u"AST", wx.DATAVIEW_CELL_INERT, 50, wx.ALIGN_LEFT, 0 )
         bSizer6.Add( self.m_bsdl_data, 1, wx.ALL|wx.EXPAND, 5 )
 
 

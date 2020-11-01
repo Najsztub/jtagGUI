@@ -223,9 +223,9 @@ class RightPanel(wx.Panel):
 
 #######################################################################
 # Main window class
-class Mywin(wx.Frame): 
+class Mywin(panels.MainFrame): 
   def __init__(self, parent, title, parser = None): 
-    super(wx.Frame, self).__init__(parent, title = title,size = (640,480))  
+    panels.MainFrame.__init__(self, parent)  
 
     self.parser = parser
     self.devs = []
@@ -276,57 +276,6 @@ class Mywin(wx.Frame):
     self.SetSizer(sizer)
 
     # wxFormBuilder generated code
-
-    self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
-
-    self.m_statusBar1 = self.CreateStatusBar( 2, wx.STB_SIZEGRIP, wx.ID_ANY )
-    self.m_menubar1 = wx.MenuBar( 0 )
-    self.m_menu1 = wx.Menu()
-    self.m_load = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Load BSDL", wx.EmptyString, wx.ITEM_NORMAL )
-    self.m_load.SetBitmap( wx.NullBitmap )
-    self.m_menu1.Append( self.m_load )
-
-    self.m_exit = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"E&xit", wx.EmptyString, wx.ITEM_NORMAL )
-    self.m_menu1.Append( self.m_exit )
-
-    self.m_menubar1.Append( self.m_menu1, u"File" )
-
-    self.m_menu2 = wx.Menu()
-    self.m_menubar1.Append( self.m_menu2, u"Chain" )
-
-    self.m_menu3 = wx.Menu()
-    self.m_bsld_repo = wx.MenuItem( self.m_menu3, wx.ID_ANY, u"BSDL repository", wx.EmptyString, wx.ITEM_NORMAL )
-    self.m_menu3.Append( self.m_bsld_repo )
-
-    self.m_menubar1.Append( self.m_menu3, u"Tools" )
-
-    self.SetMenuBar( self.m_menubar1 )
-
-    self.m_toolbar1 = self.CreateToolBar( wx.TB_HORIZONTAL, wx.ID_ANY )
-    self.m_t_open = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_FILE_OPEN,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Open BSDL file", wx.EmptyString, None )
-
-    self.m_toolbar1.AddSeparator()
-
-    self.m_chain_start = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chin", wx.EmptyString, None )
-
-    self.m_chain_stop = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_CLOSE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Stop JTAG chain", wx.EmptyString, None )
-
-    m_cableChoices = [ u"Select device", u"usbblaster" ]
-    self.m_cable = wx.Choice( self.m_toolbar1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_cableChoices, 0 )
-    self.m_cable.SetSelection( 0 )
-    self.m_toolbar1.AddControl( self.m_cable )
-    self.m_toolbar1.Realize()
-
-
-    self.Centre( wx.BOTH )
-
-    # Connect Events
-    self.Bind( wx.EVT_MENU, self.loadFile, id = self.m_load.GetId() )
-    self.Bind( wx.EVT_MENU, self.OnExit, id = self.m_exit.GetId() )
-    self.Bind( wx.EVT_MENU, self.editBSDLrepo, id = self.m_bsld_repo.GetId() )
-    self.Bind( wx.EVT_TOOL, self.loadFile, id = self.m_t_open.GetId() )
-    self.Bind( wx.EVT_TOOL, self.attachChain, id = self.m_chain_start.GetId() )
-    self.Bind( wx.EVT_TOOL, self.dropChain, id = self.m_chain_stop.GetId() )
 
     self.Show(True)
     
