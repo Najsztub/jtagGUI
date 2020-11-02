@@ -38,6 +38,9 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.m_pinList.AppendColumn("Name")
     self.m_pinList.AppendColumn("Type")
 
+    # Add root to TreeList
+    self.ch_root = self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
+
     # Allow for column sorting
     listmix.ColumnSorterMixin.__init__(self, 3)
     self.Bind(wx.EVT_LIST_COL_CLICK, self.OnColClick, self.m_pinList)
@@ -54,6 +57,9 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def addDev(self, device):
     # Add devices to list 
     self.m_dev_choice.Append(device.name)
+    # TODO: Add device to tree list
+    child = self.m_chain.AppendItem(self.ch_root, "Device %s" % device.chain_id)
+    self.m_chain.SetItemText(child, 1, device.name)
 
   def selectDev(self, event):
     self.active_dev = self.m_dev_choice.GetSelection()
@@ -355,7 +361,8 @@ class Mywin(panels.MainFrame):
       # TODO: Populate app with devices
       dev_code = self.chain.partid(devid)
       dev = DUT(idcode=dev_code)
-      # TODO: Search for IDCODE in DB
+      dev.chain_id = devid
+      # Search for IDCODE in DB
       db_bsdl = self.bsdl_repo.getCodes(dev_code)
       if db_bsdl is not None and db_bsdl[1] is not None:
         dev.addAST(db_bsdl[1])
