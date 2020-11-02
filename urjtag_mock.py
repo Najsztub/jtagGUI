@@ -14,13 +14,16 @@ class chain:
     self.j_cable = j_cable
 
   def tap_detect(self):
-    self.bsr_len = 798
+    pass
 
   def len(self):
-    return 1
+    return 4
 
   def part(self, id):
-    if id ==0 : self.bsr_len = 798
+    if id == 0 : self.bsr_len = 798
+    elif id == 1: self.bsr_len = 100
+    elif id == 2: self.bsr_len = 240
+    elif id == 3: self.bsr_len = 960
     else: pass
 
   def addpart(self, ir_len):
@@ -29,6 +32,9 @@ class chain:
   def partid(self, id):
     if id == 0: return '00010001000001010000000011011101'
     elif id == 1: return '11010001011001010000000011011101'
+    elif id == 2: return '00000010000010100001000011011101'
+    elif id == 3: return '00000001000001010000000011011101'
+
     else: return None
     
   def set_trst(self, st):
@@ -39,7 +45,6 @@ class chain:
 
   def set_instruction(self, instr):
     self.cur_inst = instr
-    self.bsr_len = self.regs[self.instructions[instr]['reg']]
 
   def shift_ir(self):
     pass

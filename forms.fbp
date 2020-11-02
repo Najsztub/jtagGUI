@@ -229,18 +229,6 @@
                     <property name="permission">protected</property>
                 </object>
                 <object class="tool" expanded="1">
-                    <property name="bitmap">Load From Art Provider; wxART_PLUS; </property>
-                    <property name="context_menu">0</property>
-                    <property name="id">wxID_ANY</property>
-                    <property name="kind">wxITEM_NORMAL</property>
-                    <property name="label"></property>
-                    <property name="name">m_chain_start</property>
-                    <property name="permission">protected</property>
-                    <property name="statusbar"></property>
-                    <property name="tooltip">Start JTAG chin</property>
-                    <event name="OnToolClicked">attachChain</event>
-                </object>
-                <object class="tool" expanded="1">
                     <property name="bitmap">Load From Art Provider; wxART_CLOSE; </property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
@@ -310,6 +298,18 @@
                     <property name="window_extra_style"></property>
                     <property name="window_name"></property>
                     <property name="window_style"></property>
+                </object>
+                <object class="tool" expanded="1">
+                    <property name="bitmap">Load From Art Provider; wxART_PLUS; </property>
+                    <property name="context_menu">0</property>
+                    <property name="id">wxID_ANY</property>
+                    <property name="kind">wxITEM_NORMAL</property>
+                    <property name="label"></property>
+                    <property name="name">m_chain_start</property>
+                    <property name="permission">protected</property>
+                    <property name="statusbar"></property>
+                    <property name="tooltip">Start JTAG chin</property>
+                    <event name="OnToolClicked">attachChain</event>
                 </object>
                 <object class="wxButton" expanded="1">
                     <property name="BottomDockable">1</property>
@@ -614,13 +614,13 @@
                                     <property name="alignment">wxALIGN_LEFT</property>
                                     <property name="flag">wxCOL_RESIZABLE|wxCOL_SORTABLE</property>
                                     <property name="name">Properties</property>
-                                    <property name="width">wxCOL_WIDTH_DEFAULT</property>
+                                    <property name="width">wxCOL_WIDTH_AUTOSIZE</property>
                                 </object>
                                 <object class="wxTreeListCtrlColumn" expanded="1">
                                     <property name="alignment">wxALIGN_LEFT</property>
                                     <property name="flag">wxCOL_RESIZABLE</property>
                                     <property name="name">Values</property>
-                                    <property name="width">wxCOL_WIDTH_DEFAULT</property>
+                                    <property name="width">wxCOL_WIDTH_AUTOSIZE</property>
                                 </object>
                             </object>
                         </object>
@@ -882,8 +882,8 @@
                             <property name="label">Add BSDL definition</property>
                             <property name="name">m_bsdl_add</property>
                             <property name="permission">protected</property>
-                            <property name="statusbar"></property>
-                            <property name="tooltip"></property>
+                            <property name="statusbar">Add BSDL file to repository</property>
+                            <property name="tooltip">Add BSDL file</property>
                             <event name="OnToolClicked">addBSDL</event>
                         </object>
                         <object class="tool" expanded="1">
@@ -894,9 +894,23 @@
                             <property name="label">Drop BSDL definition</property>
                             <property name="name">m_bsdl_drop</property>
                             <property name="permission">protected</property>
-                            <property name="statusbar"></property>
-                            <property name="tooltip"></property>
+                            <property name="statusbar">Delete BSDL file from repository</property>
+                            <property name="tooltip">Delete BSDL file</property>
                             <event name="OnToolClicked">dropBSDL</event>
+                        </object>
+                        <object class="toolSeparator" expanded="1">
+                            <property name="permission">protected</property>
+                        </object>
+                        <object class="tool" expanded="1">
+                            <property name="bitmap">Load From Art Provider; wxART_FILE_SAVE; </property>
+                            <property name="context_menu">0</property>
+                            <property name="id">wxID_ANY</property>
+                            <property name="kind">wxITEM_NORMAL</property>
+                            <property name="label">tool</property>
+                            <property name="name">m_backup</property>
+                            <property name="permission">protected</property>
+                            <property name="statusbar">Export backup (SQLite)</property>
+                            <property name="tooltip">Export backup</property>
                         </object>
                     </object>
                 </object>
@@ -956,7 +970,7 @@
                             <property name="name">m_bsdl_idcode</property>
                             <property name="permission">protected</property>
                             <property name="type">Text</property>
-                            <property name="width">-1</property>
+                            <property name="width">150</property>
                         </object>
                         <object class="dataViewListColumn" expanded="1">
                             <property name="align">wxALIGN_LEFT</property>
@@ -967,7 +981,7 @@
                             <property name="name">m_bsdl_source</property>
                             <property name="permission">protected</property>
                             <property name="type">Text</property>
-                            <property name="width">-1</property>
+                            <property name="width">250</property>
                         </object>
                         <object class="dataViewListColumn" expanded="1">
                             <property name="align">wxALIGN_LEFT</property>

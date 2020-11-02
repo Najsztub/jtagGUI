@@ -57,17 +57,38 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def addDev(self, device):
     # Add devices to list 
     self.m_dev_choice.Append(device.name)
-    # TODO: Add device to tree list
+    # Add device to tree list
     child = self.m_chain.AppendItem(self.ch_root, "Device %s" % device.chain_id)
     self.m_chain.SetItemText(child, 1, device.name)
+    # Add registers
+    regs_parent = self.m_chain.AppendItem(child, "Registers")
+    self.m_chain.SetItemText(regs_parent, 1, str(len(device.registers)))
+    for reg in device.registers:
+      reg_ch = self.m_chain.AppendItem(regs_parent, str(reg[0]))
+      self.m_chain.SetItemText(reg_ch, 1, str(reg[1]))
+    # Instructions
+    inst_parent = self.m_chain.AppendItem(child, "Instructions")
+    self.m_chain.SetItemText(inst_parent, 1, str(len(device.instructions)))
+    for inst in device.instructions:
+      inst_ch = self.m_chain.AppendItem(inst_parent, str(inst[0]))
+      self.m_chain.SetItemText(inst_ch, 1, str(inst[1]))
+
 
   def selectDev(self, event):
     self.active_dev = self.m_dev_choice.GetSelection()
     self.rightP.dev = self.mainW.devs[self.active_dev]
 
+    # Add description in bottom status bar
+    self.mainW.m_statusBar1.SetStatusText(', '.join([
+      self.mainW.devs[self.active_dev].name,
+      self.mainW.devs[self.active_dev].package
+    ])) 
+
     # Fill list with pin description
     self.m_pinList.DeleteAllItems()
     self.itemDataMap = [] 
+    # Make sure that we have any pins
+    if self.mainW.devs[self.active_dev].pins is None: return
     index = 0
     for key, data in self.mainW.devs[self.active_dev].pins.items():
       self.m_pinList.InsertItem(index, data['pin_id'])
@@ -81,11 +102,6 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.itemDataMap.append([data['pin_id'], data['name'], pin_type])
       index += 1
     
-    # Add description in bottom status bar
-    self.mainW.m_statusBar1.SetStatusText(', '.join([
-      self.mainW.devs[self.active_dev].name,
-      self.mainW.devs[self.active_dev].package
-    ])) 
     # Refresh pin image
     self.rightP.Refresh()
 
@@ -312,7 +328,6 @@ class Mywin(panels.MainFrame):
     # Parse BSDL file
     try:
       ast = self.parser.parseBSDL(file)
-
       dev = DUT(ast)
       # self.addDev(dev)
       self.m_statusBar1.SetStatusText(file, 1) 
@@ -368,6 +383,10 @@ class Mywin(panels.MainFrame):
         dev.addAST(db_bsdl[1])
         dev.inner_id = db_bsdl[0]
       else:
+        dev.idcode = dev_code
+        dev.addRegisters('IDCODE', 32)
+        dev.addInstructions('IDCODE', None, 'IDCODE')
+        dev.name = "Unknown (%s)" % len(self.devs)
         self.log("Unknown device IDCODE: %s" % dev_code)
       # Notice widgets about new device
       self.addDevice(dev)

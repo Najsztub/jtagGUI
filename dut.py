@@ -14,6 +14,7 @@ class DUT:
 
     self.chain_id = None
 
+    self.ast = None
     self.pins = None
     self.registers = [["BYPASS", 1]]
     self.instructions = []
@@ -72,6 +73,7 @@ class DUT:
     # Manually add registers or discover from AST
     if name is not None and length is not None:
       self.registers.append([name, length])
+      return
     if self.ast is None: return
     # Read registers from AST
 
@@ -101,7 +103,7 @@ class DUT:
     for reg in regs_ast:
       reg_name = reg["register"]["reg_name"]
       reg_len = None
-      if "reg_length" in reg['register']: reg_len = int(reg["register"]["reg_len"])
+      if "reg_length" in reg['register']: reg_len = int(reg["register"]["reg_length"])
       for inst in reg["instruction_capture_list"]:
         # Append reg_len if None and instruction is in instr
         inst_name = inst["instruction_name"]
@@ -125,8 +127,9 @@ class DUT:
 
   def addInstructions(self, name=None, opcode=None, reg=None):
     # Manually add instructions or discover from AST
-    if name is not None and opcode is not None:
+    if name is not None:
       self.instructions.append([name, opcode, reg])
+      return
     if self.ast is None: return
     for inst in self.ast["instruction_register_description"]["instruction_opcodes"]:
       reg = None

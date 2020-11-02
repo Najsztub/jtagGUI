@@ -50,14 +50,14 @@ class MainFrame ( wx.Frame ):
 
         self.m_toolbar1.AddSeparator()
 
-        self.m_chain_start = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chin", wx.EmptyString, None )
-
         self.m_chain_stop = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_CLOSE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Stop JTAG chain", wx.EmptyString, None )
 
         m_cableChoices = [ u"Select device", u"usbblaster" ]
         self.m_cable = wx.Choice( self.m_toolbar1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_cableChoices, 0 )
         self.m_cable.SetSelection( 0 )
         self.m_toolbar1.AddControl( self.m_cable )
+        self.m_chain_start = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chin", wx.EmptyString, None )
+
         self.m_scan_tap = wx.Button( self.m_toolbar1, wx.ID_ANY, u"Scan", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_scan_tap.Enable( False )
 
@@ -72,8 +72,8 @@ class MainFrame ( wx.Frame ):
         self.Bind( wx.EVT_MENU, self.OnExit, id = self.m_exit.GetId() )
         self.Bind( wx.EVT_MENU, self.editBSDLrepo, id = self.m_bsld_repo.GetId() )
         self.Bind( wx.EVT_TOOL, self.loadFile, id = self.m_t_open.GetId() )
-        self.Bind( wx.EVT_TOOL, self.attachChain, id = self.m_chain_start.GetId() )
         self.Bind( wx.EVT_TOOL, self.dropChain, id = self.m_chain_stop.GetId() )
+        self.Bind( wx.EVT_TOOL, self.attachChain, id = self.m_chain_start.GetId() )
         self.m_scan_tap.Bind( wx.EVT_BUTTON, self.scanTAP )
 
     def __del__( self ):
@@ -91,10 +91,10 @@ class MainFrame ( wx.Frame ):
         event.Skip()
 
 
-    def attachChain( self, event ):
+    def dropChain( self, event ):
         event.Skip()
 
-    def dropChain( self, event ):
+    def attachChain( self, event ):
         event.Skip()
 
     def scanTAP( self, event ):
@@ -134,8 +134,8 @@ class LeftPanel ( wx.Panel ):
         bSizer4 = wx.BoxSizer( wx.VERTICAL )
 
         self.m_chain = wx.dataview.TreeListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.dataview.TL_DEFAULT_STYLE )
-        self.m_chain.AppendColumn( u"Properties", wx.COL_WIDTH_DEFAULT, wx.ALIGN_LEFT, wx.COL_RESIZABLE|wx.COL_SORTABLE )
-        self.m_chain.AppendColumn( u"Values", wx.COL_WIDTH_DEFAULT, wx.ALIGN_LEFT, wx.COL_RESIZABLE )
+        self.m_chain.AppendColumn( u"Properties", wx.COL_WIDTH_AUTOSIZE, wx.ALIGN_LEFT, wx.COL_RESIZABLE|wx.COL_SORTABLE )
+        self.m_chain.AppendColumn( u"Values", wx.COL_WIDTH_AUTOSIZE, wx.ALIGN_LEFT, wx.COL_RESIZABLE )
 
         bSizer4.Add( self.m_chain, 1, wx.EXPAND |wx.ALL, 5 )
 
@@ -200,9 +200,13 @@ class BSDLRepo ( wx.Dialog ):
         bSizer6 = wx.BoxSizer( wx.VERTICAL )
 
         self.m_toolBar2 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
-        self.m_bsdl_add = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"Add BSDL definition", wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+        self.m_bsdl_add = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"Add BSDL definition", wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Add BSDL file", u"Add BSDL file to repository", None )
 
-        self.m_bsdl_drop = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"Drop BSDL definition", wx.ArtProvider.GetBitmap( wx.ART_MINUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+        self.m_bsdl_drop = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"Drop BSDL definition", wx.ArtProvider.GetBitmap( wx.ART_MINUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Delete BSDL file", u"Delete BSDL file from repository", None )
+
+        self.m_toolBar2.AddSeparator()
+
+        self.m_backup = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"tool", wx.ArtProvider.GetBitmap( wx.ART_FILE_SAVE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Export backup", u"Export backup (SQLite)", None )
 
         self.m_toolBar2.Realize()
 
@@ -211,8 +215,8 @@ class BSDLRepo ( wx.Dialog ):
         self.m_bsdl_data = wx.dataview.DataViewListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.dataview.DV_MULTIPLE )
         self.m_bsdl_name = self.m_bsdl_data.AppendTextColumn( u"Name", wx.dataview.DATAVIEW_CELL_ACTIVATABLE, 150, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE|wx.dataview.DATAVIEW_COL_SORTABLE )
         self.m_bsdl_date_add = self.m_bsdl_data.AppendTextColumn( u"Date added", wx.dataview.DATAVIEW_CELL_INERT, 150, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE|wx.dataview.DATAVIEW_COL_SORTABLE )
-        self.m_bsdl_idcode = self.m_bsdl_data.AppendTextColumn( u"IDCODE", wx.dataview.DATAVIEW_CELL_INERT, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
-        self.m_bsdl_source = self.m_bsdl_data.AppendTextColumn( u"Source", wx.dataview.DATAVIEW_CELL_INERT, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_bsdl_idcode = self.m_bsdl_data.AppendTextColumn( u"IDCODE", wx.dataview.DATAVIEW_CELL_INERT, 150, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_bsdl_source = self.m_bsdl_data.AppendTextColumn( u"Source", wx.dataview.DATAVIEW_CELL_INERT, 250, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
         self.m_bsdl_has_ast = self.m_bsdl_data.AppendToggleColumn( u"AST", wx.dataview.DATAVIEW_CELL_INERT, 50, wx.ALIGN_LEFT, 0 )
         bSizer6.Add( self.m_bsdl_data, 1, wx.ALL|wx.EXPAND, 5 )
 
