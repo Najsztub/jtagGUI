@@ -92,14 +92,14 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     index = 0
     for key, data in self.mainW.devs[self.active_dev].pins.items():
       self.m_pinList.InsertItem(index, data['pin_id'])
-      self.m_pinList.SetItem(index, 1, data['name'])
+      self.m_pinList.SetItem(index, 1, data['port_name'])
       if 'pin_type' in data:
         pin_type = data['pin_type']
       else:
         pin_type = '-'
       self.m_pinList.SetItem(index, 2, pin_type)
       self.m_pinList.SetItemData(index, key)
-      self.itemDataMap.append([data['pin_id'], data['name'], pin_type])
+      self.itemDataMap.append([data['pin_id'], data['port_name'], pin_type])
       index += 1
     
     # Refresh pin image
@@ -206,9 +206,9 @@ class RightPanel(wx.Panel):
 
       # Set fill colour depending on Pin name
       pin_color = self.mainW.PIN_COLS['oth']
-      if it['name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
-      elif it['name'] == 'GND':  pin_color = self.mainW.PIN_COLS['gnd']
-      elif it['name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
+      if it['port_name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
+      elif it['port_name'] == 'GND':  pin_color = self.mainW.PIN_COLS['gnd']
+      elif it['port_name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
       dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
 
       # Draw rectangles for pins
@@ -231,17 +231,23 @@ class RightPanel(wx.Panel):
     chars = [char for char in string.ascii_uppercase if char not in 'IOQS']
     rec_b = min(self.imgx, self.imgy) * .8 / side
     border = min(self.imgx, self.imgy) * 0.1
+    # Set font
+    font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_ROMAN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+    dc.SetFont(font) 
     for i in range(side):
+      dc.DrawText(chars[i], border - rec_b, math.ceil(rec_b * i + border))
       for j in range(side):
+        if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), border - rec_b)
+
         it = dev.pins[dev.pin_dict[chars[i] + str(j+1)]]
         # Set pin color
         pin_color = self.mainW.PIN_COLS['oth']
-        if it['name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
-        elif it['name'] == 'GND':  pin_color = self.mainW.PIN_COLS['gnd']
-        elif it['name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
+        if it['port_name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
+        elif it['port_name'] == 'GND':  pin_color = self.mainW.PIN_COLS['gnd']
+        elif it['port_name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
         dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID)) 
         # Draw pin
-        dc.DrawRectangle(border + math.ceil(rec_b * i), border + math.floor(rec_b* j), math.floor(rec_b), math.floor(rec_b)) 
+        dc.DrawRectangle(border + math.ceil(rec_b * j), border + math.floor(rec_b* i), math.floor(rec_b), math.floor(rec_b)) 
 
 #######################################################################
 # Main window class

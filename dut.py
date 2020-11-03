@@ -3,6 +3,7 @@
 # Pin - physical connection
 # Port - Unit functional representationof pin or group of pins
 # Cell - BSR cell. Can be associated with Port, but not necessarily
+  
 
 class DUT:
   def __init__(self, ast=None, idcode=None):
@@ -18,6 +19,8 @@ class DUT:
     self.pins = None
     self.registers = [["BYPASS", 1]]
     self.instructions = []
+
+    self.bsr_def = ()
 
     if ast is not None:
       self.addAST(ast)
@@ -38,10 +41,17 @@ class DUT:
 
     # Create pin dict
     pins = self.ast['device_package_pin_mappings'][0]['pin_map']
-    plist = [{'pin_id': pn, 'name': p['port_name']} for p in pins for pn in p['pin_list']]
+    plist = [{'pin_id': pn, 'port_name': p['port_name']} for p in pins for pn in p['pin_list']]
 
     # For searching pins by port
-    self.port_dict = [p['name'] for p in plist]
+    self.port_map = {}
+    for id, pin in enumerate(plist):
+      if pin['port_name'] in self.port_map:
+        # Append id to port
+        self.port_map[pin['port_name']].append(id)
+        pass
+      # Else create key and list
+      self.port_map[pin['port_name']] = [id]
 
     # Save as dict of dicts
     self.pins = dict([(p[0], p[1]) for p in enumerate(plist)])
@@ -52,13 +62,13 @@ class DUT:
         for port in gr["identifier_list"]:
           self.setPort(port, "port_group", group_id)
           self.setPort(port, "pin_type", gr['pin_type'])
+          self.setPort(port, "read", '')
     
     # Make pins addressable by pin_id
     self.pin_dict = dict([(p[1]['pin_id'], p[0]) for p in enumerate(plist)])
 
-
   def setPort(self, port, key, value):
-    pid = [i for i, x in self.pins.items() if x['name'] == port] 
+    pid = [i for i, x in self.pins.items() if x['port_name'] == port] 
     for p in pid:
       self.pins[p][key] = value
   
@@ -78,10 +88,12 @@ class DUT:
     # Read registers from AST
 
     # Add IR first
-    self.registers.append(["IR", int(self.ast["instruction_register_description"]["instruction_length"])])
+    if 'IR' not in [r[0] for r in self.registers]: 
+      self.registers.append(["IR", int(self.ast["instruction_register_description"]["instruction_length"])])
     
     # And now BSR
-    self.registers.append(["BSR", int(self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_length"])])
+    if 'BSR' not in [r[0] for r in self.registers]: 
+      self.registers.append(["BSR", int(self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_length"])])
     
     # "optional_register_description" - description of registers. Can be list of dicts or a dict
     # Pack in list if dict
@@ -145,6 +157,29 @@ class DUT:
         iid = [i for i,x in enumerate(self.instructions) if x[0] == inst["instruction_name"]][0] 
         if self.instructions[iid][1] is None: self.instructions[iid][1] = inst["opcode_list"][0]
 
-  def prepareBSR(self):
-    # TODO: Parse BSR
-    pass
+  def addCells(self):
+    # TODO: Add cells manually
+    if self.ast is None: return
+    # Parse AST
+    ast_cells = self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_register"]
+    self.bsr_cells = [None,] * int(self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_length"])
+    for cell in ast_cells:
+      cell_id = int(cell["cell_number"])
+      cell_spec = cell['cell_info']["cell_spec"]
+      cell_spec['cell_id'] = cell_id
+      if "input_or_disable_spec" in cell['cell_info']: cell_spec['ctrl'] = cell['cell_info']["input_or_disable_spec"]
+      self.bsr_cells[cell_id] = cell_spec
+
+    self.bsr_in_cells = [c for c in self.bsr_cells if c['function'].upper() in ['INPUT', 'CLOCK']]
+
+  def parseBSR(self, bsr):
+    for c in self.bsr_in_cells:
+      port = c['port_id']
+      id = c['cell_id']
+      pin_id = self.port_map[port][0]
+      self.pins[pin_id]['read'] = bsr[id]
+
+
+  def readBSR(self, bsr):
+    self.bsr.reg = bsr
+    self.bsr.parseBSR()
