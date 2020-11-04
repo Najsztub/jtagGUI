@@ -131,6 +131,14 @@ class LeftPanel ( wx.Panel ):
 
         bSizer2.Add( bSizer3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5 )
 
+        bSizer6 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.m_bt_get_bsr = wx.Button( self, wx.ID_ANY, u"Get BSR", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer6.Add( self.m_bt_get_bsr, 0, wx.ALL, 5 )
+
+
+        bSizer2.Add( bSizer6, 0, 0, 5 )
+
         bSizer4 = wx.BoxSizer( wx.VERTICAL )
 
         self.m_chain = wx.dataview.TreeListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.dataview.TL_DEFAULT_STYLE )
@@ -151,6 +159,7 @@ class LeftPanel ( wx.Panel ):
 
         # Connect Events
         self.m_dev_choice.Bind( wx.EVT_CHOICE, self.selectDev )
+        self.m_bt_get_bsr.Bind( wx.EVT_BUTTON, self.getBSR )
 
     def __del__( self ):
         pass
@@ -158,6 +167,9 @@ class LeftPanel ( wx.Panel ):
 
     # Virtual event handlers, overide them in your derived class
     def selectDev( self, event ):
+        event.Skip()
+
+    def getBSR( self, event ):
         event.Skip()
 
 

@@ -55,6 +55,8 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     event.Skip()
 
   def addDev(self, device):
+    # Add BSR definition
+    device.addCells()
     # Add devices to list 
     self.m_dev_choice.Append(device.name)
     # Add device to tree list
@@ -73,10 +75,12 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       inst_ch = self.m_chain.AppendItem(inst_parent, str(inst[0]))
       self.m_chain.SetItemText(inst_ch, 1, str(inst[1]))
 
-
   def selectDev(self, event):
     self.active_dev = self.m_dev_choice.GetSelection()
     self.rightP.dev = self.mainW.devs[self.active_dev]
+
+    # Select dev in UrJTAG
+    self.mainW.chain.part(self.active_dev)
 
     # Add description in bottom status bar
     self.mainW.m_statusBar1.SetStatusText(', '.join([
@@ -84,6 +88,9 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.mainW.devs[self.active_dev].package
     ])) 
 
+    # Refresh pin image
+    self.rightP.Refresh()
+    
     # Fill list with pin description
     self.m_pinList.DeleteAllItems()
     self.itemDataMap = [] 
@@ -102,6 +109,14 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.itemDataMap.append([data['pin_id'], data['port_name'], pin_type])
       index += 1
     
+  def getBSR(self, event):
+    # Set IR to SAMPLE
+    self.mainW.chain.set_instruction('SAMPLE')
+    self.mainW.chain.shift_ir()
+    # Get BSR from device and update rightP
+    self.mainW.chain.shift_dr()
+    bsr = self.mainW.chain.get_dr_in_string()
+    self.mainW.devs[self.active_dev].parseBSR(bsr)
     # Refresh pin image
     self.rightP.Refresh()
 
@@ -183,19 +198,43 @@ class RightPanel(wx.Panel):
     dc.Clear() 
     if self.dev is None: return
 
-    pen = wx.Pen(wx.Colour(0,0,255)) 
+    pen = wx.Pen(wx.Colour(200,200,255)) 
     dc.SetPen(pen) 
     dc.SetBrush(wx.Brush(wx.Colour(0,255,0), wx.TRANSPARENT)) 
     # for dev in self.dev:
     pkg = self.dev.package
     if bool(re.search("BGA", pkg)): self.plotBGA(dc, self.dev)
     else: self.plotTQFP(dc, self.dev)
+
+  def plotPin(self, dc, pin, pt, width):
+    # Set fill colour depending on Pin name
+    pin_color = self.mainW.PIN_COLS['oth']
+    if pin['port_name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
+    elif pin['port_name'] == 'GND':  pin_color = self.mainW.PIN_COLS['gnd']
+    elif pin['port_name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
+    dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
+
+    # Plot pin square
+    dc.DrawRectangle(pt[0], pt[1], width, width) 
+
+    # Draw state
+    if 'read' in pin and pin['read'] != '':
+      state_col = self.mainW.PIN_COLS['io_z']
+      if pin['read'] == '0': state_col = self.mainW.PIN_COLS['io_0']
+      elif pin['read'] == '1': state_col = self.mainW.PIN_COLS['io_1']
+      # Draw circle 
+      # pen=wx.Pen('blue',4)
+      # dc.SetPen(pen)
+      dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
+
+      dc.DrawCircle(pt[0] + 0.5 * width, pt[1] + 0.5 * width, 0.3 * width)
   
   def plotTQFP(self, dc, dev):
     npins = len(dev.pins)
     side = math.ceil(npins / 4)
     pt_dir = [(1, 0), (0, 1), (-1, 0), (0, -1)]
     rec_b = min(self.imgx, self.imgy) * .8 / side
+    pin_w = math.floor(rec_b)
     border = min(self.imgx, self.imgy) * 0.1
     coord = [border, border]
     for i in range(npins):
@@ -204,50 +243,46 @@ class RightPanel(wx.Panel):
       # it = next((i for i, item in enumerate(dev.pins) if dev.pins.["name"] == "Pam"), None)
       it = dev.pins[dev.pin_dict[str(i+1)]]
 
-      # Set fill colour depending on Pin name
-      pin_color = self.mainW.PIN_COLS['oth']
-      if it['port_name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
-      elif it['port_name'] == 'GND':  pin_color = self.mainW.PIN_COLS['gnd']
-      elif it['port_name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
-      dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
-
       # Draw rectangles for pins
       # Move pins 1 unit, so they do not overlap in corners
       if ( math.floor(i / side) == 1):
-        dc.DrawRectangle(math.floor(coord[0]), math.floor(coord[1] +  rec_b), math.floor(rec_b), math.floor(rec_b)) 
+        pt = [math.floor(coord[0]), math.floor(coord[1] +  rec_b)]
       elif (math.floor(i / side) == 2):
-        dc.DrawRectangle(math.floor(coord[0] - rec_b), math.floor(coord[1] +  rec_b), math.floor(rec_b), math.floor(rec_b)) 
+        pt = [math.floor(coord[0] - rec_b), math.floor(coord[1] +  rec_b)]
       elif (math.floor(i / side) == 3):
-        dc.DrawRectangle(math.floor(coord[0] - rec_b), math.floor(coord[1]), math.floor(rec_b), math.floor(rec_b)) 
+        pt = [math.floor(coord[0] - rec_b), math.floor(coord[1])]
       else:
-        dc.DrawRectangle(math.floor(coord[0]), math.floor(coord[1]), math.floor(rec_b), math.floor(rec_b)) 
+        pt = [math.floor(coord[0]), math.floor(coord[1])]
+      
       # Increment coords
       coord[0] += rec_b * loc_dir[0]
       coord[1] += rec_b * loc_dir[1]
+      
+      # Draw pin
+      self.plotPin(dc, it, pt, pin_w)
 
   def plotBGA(self, dc, dev):
     npins = len(dev.pins)
     side = math.ceil(math.sqrt(npins))
     chars = [char for char in string.ascii_uppercase if char not in 'IOQS']
     rec_b = min(self.imgx, self.imgy) * .8 / side
+    pin_w = math.floor(rec_b)
     border = min(self.imgx, self.imgy) * 0.1
     # Set font
-    font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_ROMAN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+    font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
     dc.SetFont(font) 
     for i in range(side):
+      # Row pin nr
       dc.DrawText(chars[i], border - rec_b, math.ceil(rec_b * i + border))
       for j in range(side):
+        # Col pin nr
         if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), border - rec_b)
-
         it = dev.pins[dev.pin_dict[chars[i] + str(j+1)]]
-        # Set pin color
-        pin_color = self.mainW.PIN_COLS['oth']
-        if it['port_name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
-        elif it['port_name'] == 'GND':  pin_color = self.mainW.PIN_COLS['gnd']
-        elif it['port_name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
-        dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID)) 
         # Draw pin
-        dc.DrawRectangle(border + math.ceil(rec_b * j), border + math.floor(rec_b* i), math.floor(rec_b), math.floor(rec_b)) 
+        pt =[math.ceil(border + rec_b * j), math.ceil(border + rec_b* i)]
+
+        # Draw pin
+        self.plotPin(dc, it, pt, pin_w)
 
 #######################################################################
 # Main window class
@@ -269,8 +304,8 @@ class Mywin(panels.MainFrame):
       'gnd': wx.Colour(10,10,10),
       'io' : wx.Colour(240,240,240),
       'oth' : wx.Colour(150,150,220),
-      'io_1': wx.Colour(200,200,200),
-      'io_0': wx.Colour(200,200,200),
+      'io_1': wx.Colour(200,0 , 0),
+      'io_0': wx.Colour(255,255,255),
       'io_z': wx.Colour(128, 128, 128)
     }
 
