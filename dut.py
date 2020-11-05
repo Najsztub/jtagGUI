@@ -170,7 +170,7 @@ class DUT:
       if "input_or_disable_spec" in cell['cell_info']: cell_spec['ctrl'] = cell['cell_info']["input_or_disable_spec"]
       self.bsr_cells[cell_id] = cell_spec
 
-    self.bsr_in_cells = [c for c in self.bsr_cells if c['function'].upper() in ['INPUT', 'CLOCK']]
+    self.bsr_in_cells = [c for c in self.bsr_cells if c['function'].upper() in ['INPUT', 'CLOCK', 'BIDIR']]
 
   def parseBSR(self, bsr):
     for c in self.bsr_in_cells:

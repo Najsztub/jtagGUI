@@ -8,7 +8,8 @@ import re
 import panels
 from dut import DUT
 import bsdl_parser
-import urjtag_mock as urjtag
+# import urjtag_mock as urjtag
+import urjtag
 from conf_tank import BSDLtank
 
 #######################################################################
@@ -31,10 +32,12 @@ class JTAG(urjtag.chain):
     
     # Add registers to UrJTAG
     for reg in dev.registers:
+      # if reg[0] == 'BYPASS': continue
       self.add_register(reg[0], reg[1])
 
     # Add instructions to UrJTAG
     for inst in dev.instructions:
+      if inst[0] == 'BYPASS': continue
       self.add_instruction(inst[0], inst[1], inst[2])
     
     self.devs.append(dev) 
@@ -77,7 +80,7 @@ class DefineDevice(panels.DefineDevice):
     if len(id) == 0:
       self.dev.addRegisters(reg[0], reg[1])
     else: 
-      self.dev.registers[id[0]][1] = reg[1]
+      self.dev.registers[id[0]][1] = int(reg[1])
 
   def instAdd( self, event ):
     self.m_inst_list.AppendItem(['', '', ''])
@@ -176,8 +179,6 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     for reg in device.registers:
       reg_ch = self.m_chain.AppendItem(regs_parent, str(reg[0]))
       self.m_chain.SetItemText(reg_ch, 1, str(reg[1]))
-      # Add registers to UrJTAG
-      self.mainW.chain.add_register(reg[0], reg[1])
     
     # Instructions
     inst_parent = self.m_chain.AppendItem(child, "Instructions")
@@ -185,8 +186,6 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     for inst in device.instructions:
       inst_ch = self.m_chain.AppendItem(inst_parent, str(inst[0]))
       self.m_chain.SetItemText(inst_ch, 1, str(inst[1]))
-      # Add instructions to UrJTAG
-      self.mainW.chain.add_instruction(inst[0], inst[1], inst[2])
 
   def selectDev(self, event):
     self.active_dev = self.m_dev_choice.GetSelection()
@@ -224,12 +223,13 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     
   def getBSR(self, event):
     # Set IR to SAMPLE
+    self.mainW.chain.part(self.active_dev)
     self.mainW.chain.set_instruction('SAMPLE')
     self.mainW.chain.shift_ir()
     # Get BSR from device and update rightP
     self.mainW.chain.shift_dr()
     bsr = self.mainW.chain.get_dr_out_string()
-    self.mainW.chain.devs[self.active_dev].parseBSR(bsr)
+    self.mainW.chain[self.active_dev].parseBSR(bsr)
     # Refresh pin image
     self.rightP.Refresh()
 
@@ -324,7 +324,7 @@ class RightPanel(wx.Panel):
     # Set fill colour depending on Pin name
     pin_color = self.mainW.PIN_COLS['oth']
     if pin['port_name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
-    elif pin['port_name'] == 'GND':  pin_color = self.mainW.PIN_COLS['gnd']
+    elif pin['port_name'] in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
     elif pin['port_name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
     dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
 
@@ -353,8 +353,10 @@ class RightPanel(wx.Panel):
       loc_dir = pt_dir[math.floor(i / side)]
       # Search for item based on on pin nr
       # it = next((i for i, item in enumerate(dev.pins) if dev.pins.["name"] == "Pam"), None)
-      it = dev.pins[dev.pin_dict[str(i+1)]]
-
+      try:
+        it = dev.pins[dev.pin_dict[str(i+1)]]
+      except KeyError:
+        it = {'port_name': 'GND', 'pin_type': 'GND', 'read': ''}
       # Draw rectangles for pins
       # Move pins 1 unit, so they do not overlap in corners
       if ( math.floor(i / side) == 1):
@@ -494,7 +496,7 @@ class Mywin(panels.MainFrame):
     ])) 
 
   def dropChain(self, event):
-    self.chain = None
+    del self.chain 
     self.m_scan_tap.Disable()
   
   def attachChain(self, event):
@@ -519,16 +521,17 @@ class Mywin(panels.MainFrame):
     # TODO: Clear leftP lists
     self.leftP.dropDevs()
     # Get ids and search in DB
-    ids = [self.chain.partid(id) for id in range(found_chain)]
+    ids = ["{0:b}".format(self.chain.partid(id)).zfill(32) for id in range(found_chain)]
     # Reset chain
+    del self.chain
     self.chain = JTAG()
     self.chain.cable(self.m_cable.GetString(self.m_cable.GetSelection()))
 
     # Fill devices
-    for devid, dev_code in enumerate(ids):
+    for dev_code in ids:
       # Populate app with devices
       dev = DUT(idcode=dev_code)
-      dev.chain_id = devid
+      dev.chain_id = len(self.chain.devs)
       # Search for IDCODE in DB
       db_bsdl = self.bsdl_repo.getCodes(dev_code)
       if db_bsdl is not None and db_bsdl[1] is not None:
@@ -539,8 +542,8 @@ class Mywin(panels.MainFrame):
         dev.idcode = dev_code
         dev.addRegisters('IDCODE', 32)
         dev.addRegisters('IR', 0)
-        dev.addInstructions('IDCODE', None, 'IDCODE')
-        dev.name = "Unknown (%s)" % self.chain.len()
+        # dev.addInstructions('BYPASS', '1', 'BYPASS')
+        dev.name = "Unknown (%s)" % len(self.chain.devs)
         self.askDevice(dev)
         self.log("Unknown device IDCODE: %s" % dev_code)
       # Notice widgets about new device
@@ -555,11 +558,7 @@ class Mywin(panels.MainFrame):
 
   def askDevice(self, dev):
     with DefineDevice(self, dev) as dlg:
-      if dlg.ShowModal() == wx.ID_OK:
-        # do something here
-        print('Hello')
-      else:
-        pass
+      dlg.ShowModal()
 
   def OnExit(self, evt):
     self.Close(True)  
