@@ -17,13 +17,14 @@ class chain:
     pass
 
   def len(self):
-    return 4
+    return 5
 
   def part(self, id):
     if id == 0 : self.bsr_len = 798
     elif id == 1: self.bsr_len = 100
     elif id == 2: self.bsr_len = 240
     elif id == 3: self.bsr_len = 960
+    elif id == 4: self.bsr_len = 202
     else: pass
 
   def addpart(self, ir_len):
@@ -34,6 +35,7 @@ class chain:
     elif id == 1: return int('11010001011001010000000011011101', 2)
     elif id == 2: return int('00000010000010100001000011011101', 2)
     elif id == 3: return int('00000001000001010000000011011101', 2)
+    elif id == 4: return int('00101000001001110000000000010011', 2)
 
     else: return None
     

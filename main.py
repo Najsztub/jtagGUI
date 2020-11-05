@@ -8,8 +8,8 @@ import re
 import panels
 from dut import DUT
 import bsdl_parser
-# import urjtag_mock as urjtag
-import urjtag
+import urjtag_mock as urjtag
+# import urjtag
 from conf_tank import BSDLtank
 
 #######################################################################
@@ -140,7 +140,7 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.m_pinList.AppendColumn("Type")
 
     # Add root to TreeList
-    self.ch_root = self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
+    self.ch_root = self.m_chain.GetRootItem() # self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
 
     # Allow for column sorting
     listmix.ColumnSorterMixin.__init__(self, 3)
@@ -158,7 +158,7 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def dropDevs(self):
     # Drop dev panel devices
     self.m_chain.DeleteAllItems()
-    self.ch_root = self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
+    self.ch_root = self.m_chain.GetRootItem() # self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
     # Drop pins
     self.m_pinList.DeleteAllItems()
     # Clear choice list
@@ -344,7 +344,7 @@ class RightPanel(wx.Panel):
   def plotTQFP(self, dc, dev):
     npins = len(dev.pins)
     side = math.ceil(npins / 4)
-    pt_dir = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    pt_dir = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     rec_b = min(self.imgx, self.imgy) * .8 / side
     pin_w = math.floor(rec_b)
     border = min(self.imgx, self.imgy) * 0.1
@@ -359,12 +359,12 @@ class RightPanel(wx.Panel):
         it = {'port_name': 'GND', 'pin_type': 'GND', 'read': ''}
       # Draw rectangles for pins
       # Move pins 1 unit, so they do not overlap in corners
-      if ( math.floor(i / side) == 1):
-        pt = [math.floor(coord[0]), math.floor(coord[1] +  rec_b)]
-      elif (math.floor(i / side) == 2):
-        pt = [math.floor(coord[0] - rec_b), math.floor(coord[1] +  rec_b)]
+      if ( math.floor(i / side) == 2):
+        pt = [math.floor(coord[0] + rec_b), math.floor(coord[1] - rec_b)]
+      elif (math.floor(i / side) == 1):
+        pt = [math.floor(coord[0] + rec_b), math.floor(coord[1])]
       elif (math.floor(i / side) == 3):
-        pt = [math.floor(coord[0] - rec_b), math.floor(coord[1])]
+        pt = [math.floor(coord[0]), math.floor(coord[1] - rec_b)]
       else:
         pt = [math.floor(coord[0]), math.floor(coord[1])]
       
