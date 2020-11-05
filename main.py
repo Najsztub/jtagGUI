@@ -12,6 +12,104 @@ import urjtag_mock as urjtag
 from conf_tank import BSDLtank
 
 #######################################################################
+# Override UrJTAG class to include DUT processing
+class JTAG(urjtag.chain):
+  def __init__(self):
+    #initialize parent class
+    urjtag.chain.__init__(self)
+    self.devs = []
+  
+  def addDevs(self, dev_list):
+    for dev in dev_list:
+      self.addDev(dev)
+
+  def addDev(self, dev):
+    # Add IR 
+    ir_len = [r[1] for r in dev.registers if r[0] == "IR"][0]
+    self.addpart(ir_len)
+    self.part(len(self.devs))
+    
+    # Add registers to UrJTAG
+    for reg in dev.registers:
+      self.add_register(reg[0], reg[1])
+
+    # Add instructions to UrJTAG
+    for inst in dev.instructions:
+      self.add_instruction(inst[0], inst[1], inst[2])
+    
+    self.devs.append(dev) 
+
+  def __getitem__(self, id):
+    return self.devs[id]
+
+#######################################################################
+# Device mod dialog
+class DefineDevice(panels.DefineDevice):
+  #constructor
+  def __init__(self,parent, dev):
+    #initialize parent class
+    panels.DefineDevice.__init__(self, parent)
+    self.dev = dev
+    # Fill registers and instructions
+    for reg in self.dev.registers:
+      self.m_reg_list.AppendItem([reg[0], str(reg[1])])
+    for inst in self.dev.instructions:
+      self.m_inst_list.AppendItem(inst)
+
+  def regAdd( self, event ):
+    self.m_reg_list.AppendItem(['', ''])
+
+  def regDrop( self, event ):
+    selected = self.m_reg_list.GetSelectedRow()
+    reg = self.m_reg_list.GetItemData(selected)
+    id = [i for i, r in self.dev.registers if r[0] == reg[0]]
+    if len(id) != 0:
+      del self.dev.registers[id[0]]
+    self.m_reg_list.DeleteItem(selected)
+
+  def regChange( self, event ):
+    current = self.m_reg_list.GetSelectedRow()
+    reg = [self.m_reg_list.GetTextValue(current,col) for col in range(2)]
+    # Stop if empty
+    if reg == '': return
+    # Find id and update if exists or add
+    id = [i for i, r in enumerate(self.dev.registers) if r[0] == reg[0]]
+    if len(id) == 0:
+      self.dev.addRegisters(reg[0], reg[1])
+    else: 
+      self.dev.registers[id[0]][1] = reg[1]
+
+  def instAdd( self, event ):
+    self.m_inst_list.AppendItem(['', '', ''])
+
+  def instDrop( self, event ):
+    selected = self.m_inst_list.GetSelectedRow()
+    inst = self.m_inst_list.RowToItem(selected).value
+    id = [i for i, r in self.dev.instructions if r[0] == inst[0]]
+    if len(id) != 0:
+      del self.dev.instructions[id[0]]
+    self.m_inst_list.DeleteItem(selected)
+
+
+  def instChange( self, event ):
+    current = self.m_inst_list.GetSelectedRow()
+    inst = [self.m_inst_list.GetTextValue(current,col) for col in range(3)]
+    # Stop if empty
+    if inst == '': return
+    # Find id and update if exists or add
+    id = [i for i, r in enumerate(self.dev.instructions) if r[0] == inst[0]]
+    if len(id) == 0:
+      self.dev.addInstructions(inst[0], inst[1], inst[2])
+    else: 
+      self.dev.instructions[id[0]][1] = inst[1]
+      self.dev.instructions[id[0]][2] = inst[2]
+
+  def defDone( self, event ):
+    # TODO: Check if IR > 0
+    self.result = None
+    self.Destroy()
+
+#######################################################################
 # Override wxFormBuilder BottomPanel class
 class BottomPanel(panels.BottomPanel):
   #constructor
@@ -54,6 +152,15 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def OnColClick(self, event):
     event.Skip()
 
+  def dropDevs(self):
+    # Drop dev panel devices
+    self.m_chain.DeleteAllItems()
+    self.ch_root = self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
+    # Drop pins
+    self.m_pinList.DeleteAllItems()
+    # Clear choice list
+    self.m_dev_choice.Clear()
+
   def addDev(self, device):
     # Add BSR definition
     device.addCells()
@@ -62,30 +169,36 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     # Add device to tree list
     child = self.m_chain.AppendItem(self.ch_root, "Device %s" % device.chain_id)
     self.m_chain.SetItemText(child, 1, device.name)
+
     # Add registers
     regs_parent = self.m_chain.AppendItem(child, "Registers")
     self.m_chain.SetItemText(regs_parent, 1, str(len(device.registers)))
     for reg in device.registers:
       reg_ch = self.m_chain.AppendItem(regs_parent, str(reg[0]))
       self.m_chain.SetItemText(reg_ch, 1, str(reg[1]))
+      # Add registers to UrJTAG
+      self.mainW.chain.add_register(reg[0], reg[1])
+    
     # Instructions
     inst_parent = self.m_chain.AppendItem(child, "Instructions")
     self.m_chain.SetItemText(inst_parent, 1, str(len(device.instructions)))
     for inst in device.instructions:
       inst_ch = self.m_chain.AppendItem(inst_parent, str(inst[0]))
       self.m_chain.SetItemText(inst_ch, 1, str(inst[1]))
+      # Add instructions to UrJTAG
+      self.mainW.chain.add_instruction(inst[0], inst[1], inst[2])
 
   def selectDev(self, event):
     self.active_dev = self.m_dev_choice.GetSelection()
-    self.rightP.dev = self.mainW.devs[self.active_dev]
+    self.rightP.dev = self.mainW.chain.devs[self.active_dev]
 
     # Select dev in UrJTAG
     self.mainW.chain.part(self.active_dev)
 
     # Add description in bottom status bar
     self.mainW.m_statusBar1.SetStatusText(', '.join([
-      self.mainW.devs[self.active_dev].name,
-      self.mainW.devs[self.active_dev].package
+      self.mainW.chain.devs[self.active_dev].name,
+      self.mainW.chain.devs[self.active_dev].package
     ])) 
 
     # Refresh pin image
@@ -95,9 +208,9 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.m_pinList.DeleteAllItems()
     self.itemDataMap = [] 
     # Make sure that we have any pins
-    if self.mainW.devs[self.active_dev].pins is None: return
+    if self.mainW.chain.devs[self.active_dev].pins is None: return
     index = 0
-    for key, data in self.mainW.devs[self.active_dev].pins.items():
+    for key, data in self.mainW.chain.devs[self.active_dev].pins.items():
       self.m_pinList.InsertItem(index, data['pin_id'])
       self.m_pinList.SetItem(index, 1, data['port_name'])
       if 'pin_type' in data:
@@ -115,8 +228,8 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.mainW.chain.shift_ir()
     # Get BSR from device and update rightP
     self.mainW.chain.shift_dr()
-    bsr = self.mainW.chain.get_dr_in_string()
-    self.mainW.devs[self.active_dev].parseBSR(bsr)
+    bsr = self.mainW.chain.get_dr_out_string()
+    self.mainW.chain.devs[self.active_dev].parseBSR(bsr)
     # Refresh pin image
     self.rightP.Refresh()
 
@@ -168,8 +281,6 @@ class BSDLRepo(panels.BSDLRepo):
     self.m_bsdl_data.DeleteItem(row)
     del self.data[row]
 
-
-
 #######################################################################
 # Define Right panel class
 class RightPanel(wx.Panel):
@@ -196,12 +307,15 @@ class RightPanel(wx.Panel):
     brush = wx.Brush("white")  
     dc.SetBackground(brush)  
     dc.Clear() 
-    if self.dev is None: return
+    
+    # Skip if no pins present
+    if self.dev is None or self.dev.pins is None: return
 
     pen = wx.Pen(wx.Colour(200,200,255)) 
     dc.SetPen(pen) 
     dc.SetBrush(wx.Brush(wx.Colour(0,255,0), wx.TRANSPARENT)) 
-    # for dev in self.dev:
+    
+    # Get device package and draw appropriate pins
     pkg = self.dev.package
     if bool(re.search("BGA", pkg)): self.plotBGA(dc, self.dev)
     else: self.plotTQFP(dc, self.dev)
@@ -222,11 +336,9 @@ class RightPanel(wx.Panel):
       state_col = self.mainW.PIN_COLS['io_z']
       if pin['read'] == '0': state_col = self.mainW.PIN_COLS['io_0']
       elif pin['read'] == '1': state_col = self.mainW.PIN_COLS['io_1']
+      
       # Draw circle 
-      # pen=wx.Pen('blue',4)
-      # dc.SetPen(pen)
       dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
-
       dc.DrawCircle(pt[0] + 0.5 * width, pt[1] + 0.5 * width, 0.3 * width)
   
   def plotTQFP(self, dc, dev):
@@ -291,8 +403,7 @@ class Mywin(panels.MainFrame):
     panels.MainFrame.__init__(self, parent)  
 
     self.parser = parser
-    self.devs = []
-
+ 
     # Add JTAG chain container
     self.chain = None
 
@@ -378,15 +489,9 @@ class Mywin(panels.MainFrame):
   def selectDev(self, devid):
     # Select device in main window
     self.m_statusBar1.SetStatusText(', '.join([
-      self.devs[devid].name,
-      self.devs[devid].package
+      self.chain.devs[devid].name,
+      self.chain.devs[devid].package
     ])) 
-
-  def addDevice(self, dev):
-    # Add device to list
-    self.devs.append(dev)
-    # Append device to left panel
-    self.leftP.addDev(dev)
 
   def dropChain(self, event):
     self.chain = None
@@ -398,7 +503,7 @@ class Mywin(panels.MainFrame):
       wx.MessageBox("Please select a UrJTAG cable", caption="Invalid cable",
               style=wx.OK|wx.CENTRE)
       return
-    self.chain = urjtag.chain()
+    self.chain = JTAG()
     self.chain.cable(self.m_cable.GetString(cid))
     self.m_scan_tap.Enable()
 
@@ -411,11 +516,17 @@ class Mywin(panels.MainFrame):
       return
     if found_chain > 1: self.log("Found %s devices." % found_chain)
     else: self.log("Found %s device." % found_chain)
+    # TODO: Clear leftP lists
+    self.leftP.dropDevs()
     # Get ids and search in DB
-    self.devs = []
-    for devid in range(found_chain):
-      # TODO: Populate app with devices
-      dev_code = self.chain.partid(devid)
+    ids = [self.chain.partid(id) for id in range(found_chain)]
+    # Reset chain
+    self.chain = JTAG()
+    self.chain.cable(self.m_cable.GetString(self.m_cable.GetSelection()))
+
+    # Fill devices
+    for devid, dev_code in enumerate(ids):
+      # Populate app with devices
       dev = DUT(idcode=dev_code)
       dev.chain_id = devid
       # Search for IDCODE in DB
@@ -424,13 +535,31 @@ class Mywin(panels.MainFrame):
         dev.addAST(db_bsdl[1])
         dev.inner_id = db_bsdl[0]
       else:
+        # No IR found, so we need to provide it manually
         dev.idcode = dev_code
         dev.addRegisters('IDCODE', 32)
+        dev.addRegisters('IR', 0)
         dev.addInstructions('IDCODE', None, 'IDCODE')
-        dev.name = "Unknown (%s)" % len(self.devs)
+        dev.name = "Unknown (%s)" % self.chain.len()
+        self.askDevice(dev)
         self.log("Unknown device IDCODE: %s" % dev_code)
       # Notice widgets about new device
       self.addDevice(dev)
+
+  def addDevice(self, dev):
+    # Add device to list
+    self.chain.addDev(dev)
+    # Append device to left panel
+    self.leftP.addDev(dev)
+
+
+  def askDevice(self, dev):
+    with DefineDevice(self, dev) as dlg:
+      if dlg.ShowModal() == wx.ID_OK:
+        # do something here
+        print('Hello')
+      else:
+        pass
 
   def OnExit(self, evt):
     self.Close(True)  

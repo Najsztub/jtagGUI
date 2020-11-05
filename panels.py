@@ -46,17 +46,17 @@ class MainFrame ( wx.Frame ):
         self.SetMenuBar( self.m_menubar1 )
 
         self.m_toolbar1 = self.CreateToolBar( wx.TB_HORIZONTAL, wx.ID_ANY )
-        self.m_t_open = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_FILE_OPEN,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Open BSDL file", wx.EmptyString, None )
+        self.m_t_open = self.m_toolbar1.AddTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_FILE_OPEN,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Open BSDL file", wx.EmptyString, None )
 
         self.m_toolbar1.AddSeparator()
 
-        self.m_chain_stop = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_CLOSE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Stop JTAG chain", wx.EmptyString, None )
+        self.m_chain_stop = self.m_toolbar1.AddTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_CLOSE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Stop JTAG chain", wx.EmptyString, None )
 
         m_cableChoices = [ u"Select device", u"usbblaster" ]
         self.m_cable = wx.Choice( self.m_toolbar1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_cableChoices, 0 )
         self.m_cable.SetSelection( 0 )
         self.m_toolbar1.AddControl( self.m_cable )
-        self.m_chain_start = self.m_toolbar1.AddLabelTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chin", wx.EmptyString, None )
+        self.m_chain_start = self.m_toolbar1.AddTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chin", wx.EmptyString, None )
 
         self.m_scan_tap = wx.Button( self.m_toolbar1, wx.ID_ANY, u"Scan", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_scan_tap.Enable( False )
@@ -212,13 +212,13 @@ class BSDLRepo ( wx.Dialog ):
         bSizer6 = wx.BoxSizer( wx.VERTICAL )
 
         self.m_toolBar2 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
-        self.m_bsdl_add = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"Add BSDL definition", wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Add BSDL file", u"Add BSDL file to repository", None )
+        self.m_bsdl_add = self.m_toolBar2.AddTool( wx.ID_ANY, u"Add BSDL definition", wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Add BSDL file", u"Add BSDL file to repository", None )
 
-        self.m_bsdl_drop = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"Drop BSDL definition", wx.ArtProvider.GetBitmap( wx.ART_MINUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Delete BSDL file", u"Delete BSDL file from repository", None )
+        self.m_bsdl_drop = self.m_toolBar2.AddTool( wx.ID_ANY, u"Drop BSDL definition", wx.ArtProvider.GetBitmap( wx.ART_MINUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Delete BSDL file", u"Delete BSDL file from repository", None )
 
         self.m_toolBar2.AddSeparator()
 
-        self.m_backup = self.m_toolBar2.AddLabelTool( wx.ID_ANY, u"tool", wx.ArtProvider.GetBitmap( wx.ART_FILE_SAVE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Export backup", u"Export backup (SQLite)", None )
+        self.m_backup = self.m_toolBar2.AddTool( wx.ID_ANY, u"tool", wx.ArtProvider.GetBitmap( wx.ART_FILE_SAVE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Export backup", u"Export backup (SQLite)", None )
 
         self.m_toolBar2.Realize()
 
@@ -251,6 +251,126 @@ class BSDLRepo ( wx.Dialog ):
         event.Skip()
 
     def dropBSDL( self, event ):
+        event.Skip()
+
+
+###########################################################################
+## Class DefineDevice
+###########################################################################
+
+class DefineDevice ( wx.Dialog ):
+
+    def __init__( self, parent ):
+        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Define new Device", pos = wx.DefaultPosition, size = wx.Size( 637,473 ), style = wx.DEFAULT_DIALOG_STYLE )
+
+        self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+
+        bSizer7 = wx.BoxSizer( wx.VERTICAL )
+
+        bSizer8 = wx.BoxSizer( wx.HORIZONTAL )
+
+        bSizer10 = wx.BoxSizer( wx.VERTICAL )
+
+        self.m_toolBar3 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
+        self.m_staticText2 = wx.StaticText( self.m_toolBar3, wx.ID_ANY, u"Registers", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText2.Wrap( -1 )
+
+        self.m_toolBar3.AddControl( self.m_staticText2 )
+        self.m_r_add = self.m_toolBar3.AddTool( wx.ID_ANY, u"tool", wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Add new register", wx.EmptyString, None )
+
+        self.m_r_del = self.m_toolBar3.AddTool( wx.ID_ANY, u"tool", wx.ArtProvider.GetBitmap( wx.ART_MINUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Remove register", wx.EmptyString, None )
+
+        self.m_toolBar3.Realize()
+
+        bSizer10.Add( self.m_toolBar3, 0, wx.EXPAND|wx.LEFT, 5 )
+
+        self.m_reg_list = wx.dataview.DataViewListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.dataview.DV_HORIZ_RULES )
+        self.m_r_name = self.m_reg_list.AppendTextColumn( u"Register name", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_r_len = self.m_reg_list.AppendTextColumn( u"Register length", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        bSizer10.Add( self.m_reg_list, 1, wx.ALL|wx.EXPAND, 5 )
+
+
+        bSizer8.Add( bSizer10, 1, wx.EXPAND, 5 )
+
+        bSizer11 = wx.BoxSizer( wx.VERTICAL )
+
+        self.m_toolBar4 = wx.ToolBar( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL )
+        self.m_staticText4 = wx.StaticText( self.m_toolBar4, wx.ID_ANY, u"Instructions", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText4.Wrap( -1 )
+
+        self.m_toolBar4.AddControl( self.m_staticText4 )
+        self.m_i_add = self.m_toolBar4.AddTool( wx.ID_ANY, u"tool", wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+
+        self.m_i_del = self.m_toolBar4.AddTool( wx.ID_ANY, u"tool", wx.ArtProvider.GetBitmap( wx.ART_MINUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+
+        self.m_toolBar4.Realize()
+
+        bSizer11.Add( self.m_toolBar4, 0, wx.EXPAND|wx.LEFT, 5 )
+
+        self.m_inst_list = wx.dataview.DataViewListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_i_name = self.m_inst_list.AppendTextColumn( u"Instruction name", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_i_opcode = self.m_inst_list.AppendTextColumn( u"Opcode", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_i_reg = self.m_inst_list.AppendTextColumn( u"Reg", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        bSizer11.Add( self.m_inst_list, 1, wx.ALL|wx.EXPAND, 5 )
+
+
+        bSizer8.Add( bSizer11, 1, wx.EXPAND, 5 )
+
+
+        bSizer7.Add( bSizer8, 1, wx.EXPAND, 5 )
+
+        bSizer9 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.m_staticText5 = wx.StaticText( self, wx.ID_ANY, u"You need to provide at least IR length", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText5.Wrap( -1 )
+
+        bSizer9.Add( self.m_staticText5, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        self.m_dev_ok = wx.Button( self, wx.ID_ANY, u"OK", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer9.Add( self.m_dev_ok, 0, wx.ALL, 5 )
+
+
+        bSizer7.Add( bSizer9, 0, wx.EXPAND, 5 )
+
+
+        self.SetSizer( bSizer7 )
+        self.Layout()
+
+        self.Centre( wx.BOTH )
+
+        # Connect Events
+        self.Bind( wx.EVT_TOOL, self.regAdd, id = self.m_r_add.GetId() )
+        self.Bind( wx.EVT_TOOL, self.regDrop, id = self.m_r_del.GetId() )
+        self.m_reg_list.Bind( wx.dataview.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.regChange, id = wx.ID_ANY )
+        self.Bind( wx.EVT_TOOL, self.instAdd, id = self.m_i_add.GetId() )
+        self.Bind( wx.EVT_TOOL, self.instDrop, id = self.m_i_del.GetId() )
+        self.m_inst_list.Bind( wx.dataview.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.instChange, id = wx.ID_ANY )
+        self.m_dev_ok.Bind( wx.EVT_BUTTON, self.defDone )
+
+    def __del__( self ):
+        pass
+
+
+    # Virtual event handlers, overide them in your derived class
+    def regAdd( self, event ):
+        event.Skip()
+
+    def regDrop( self, event ):
+        event.Skip()
+
+    def regChange( self, event ):
+        event.Skip()
+
+    def instAdd( self, event ):
+        event.Skip()
+
+    def instDrop( self, event ):
+        event.Skip()
+
+    def instChange( self, event ):
+        event.Skip()
+
+    def defDone( self, event ):
         event.Skip()
 
 
