@@ -10,6 +10,7 @@
 import wx
 import wx.xrc
 import wx.dataview
+import wx.aui
 
 ###########################################################################
 ## Class MainFrame
@@ -115,26 +116,13 @@ class LeftPanel ( wx.Panel ):
 
         bSizer2 = wx.BoxSizer( wx.VERTICAL )
 
-        bSizer3 = wx.BoxSizer( wx.HORIZONTAL )
-
-        bSizer3.SetMinSize( wx.Size( -1,5 ) )
-        self.m_devLab = wx.StaticText( self, wx.ID_ANY, u"Devices:", wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_devLab.Wrap( -1 )
-
-        bSizer3.Add( self.m_devLab, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-        m_dev_choiceChoices = []
-        self.m_dev_choice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_dev_choiceChoices, 0 )
-        self.m_dev_choice.SetSelection( 0 )
-        bSizer3.Add( self.m_dev_choice, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer2.Add( bSizer3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5 )
-
         bSizer6 = wx.BoxSizer( wx.HORIZONTAL )
 
-        self.m_bt_get_bsr = wx.Button( self, wx.ID_ANY, u"Get BSR", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer6.Add( self.m_bt_get_bsr, 0, wx.ALL, 5 )
+        self.m_bt_shift_ir = wx.Button( self, wx.ID_ANY, u"Shift IR", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer6.Add( self.m_bt_shift_ir, 0, wx.ALL, 5 )
+
+        self.m_bt_get_dr = wx.Button( self, wx.ID_ANY, u"Shift DR", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer6.Add( self.m_bt_get_dr, 0, wx.ALL, 5 )
 
 
         bSizer2.Add( bSizer6, 0, 0, 5 )
@@ -142,7 +130,10 @@ class LeftPanel ( wx.Panel ):
         bSizer4 = wx.BoxSizer( wx.VERTICAL )
 
         self.m_chain = wx.dataview.TreeListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.dataview.TL_DEFAULT_STYLE )
+        self.m_chain.SetMinSize( wx.Size( -1,80 ) )
+
         self.m_chain.AppendColumn( u"Properties", wx.COL_WIDTH_AUTOSIZE, wx.ALIGN_LEFT, wx.COL_RESIZABLE|wx.COL_SORTABLE )
+        self.m_chain.AppendColumn( u"*", wx.COL_WIDTH_AUTOSIZE, wx.ALIGN_LEFT, 0 )
         self.m_chain.AppendColumn( u"Values", wx.COL_WIDTH_AUTOSIZE, wx.ALIGN_LEFT, wx.COL_RESIZABLE )
 
         bSizer4.Add( self.m_chain, 1, wx.EXPAND |wx.ALL, 5 )
@@ -158,18 +149,26 @@ class LeftPanel ( wx.Panel ):
         self.Layout()
 
         # Connect Events
-        self.m_dev_choice.Bind( wx.EVT_CHOICE, self.selectDev )
-        self.m_bt_get_bsr.Bind( wx.EVT_BUTTON, self.getBSR )
+        self.m_bt_shift_ir.Bind( wx.EVT_BUTTON, self.shiftIR )
+        self.m_bt_get_dr.Bind( wx.EVT_BUTTON, self.getBSR )
+        self.m_chain.Bind( wx.dataview.EVT_TREELIST_ITEM_ACTIVATED, self.instSet )
+        self.m_chain.Bind( wx.dataview.EVT_TREELIST_SELECTION_CHANGED, self.propCheck )
 
     def __del__( self ):
         pass
 
 
     # Virtual event handlers, overide them in your derived class
-    def selectDev( self, event ):
+    def shiftIR( self, event ):
         event.Skip()
 
     def getBSR( self, event ):
+        event.Skip()
+
+    def instSet( self, event ):
+        event.Skip()
+
+    def propCheck( self, event ):
         event.Skip()
 
 
@@ -372,5 +371,44 @@ class DefineDevice ( wx.Dialog ):
 
     def defDone( self, event ):
         event.Skip()
+
+
+###########################################################################
+## Class BSDLEditor
+###########################################################################
+
+class BSDLEditor ( wx.Frame ):
+
+    def __init__( self, parent ):
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"BSDL File Editor", pos = wx.DefaultPosition, size = wx.Size( 858,680 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+
+        self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+        self.m_mgr = wx.aui.AuiManager()
+        self.m_mgr.SetManagedWindow( self )
+        self.m_mgr.SetFlags(wx.aui.AUI_MGR_DEFAULT)
+
+        self.m_menubar2 = wx.MenuBar( 0 )
+        self.SetMenuBar( self.m_menubar2 )
+
+        self.m_statusBar2 = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
+        self.m_auinotebook2 = wx.aui.AuiNotebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.aui.AUI_NB_DEFAULT_STYLE )
+        self.m_mgr.AddPane( self.m_auinotebook2, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
+
+
+        self.m_listbook1 = wx.Listbook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LB_DEFAULT )
+        self.m_mgr.AddPane( self.m_listbook1, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
+
+
+        self.m_auinotebook3 = wx.aui.AuiNotebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.aui.AUI_NB_DEFAULT_STYLE )
+        self.m_mgr.AddPane( self.m_auinotebook3, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
+
+
+
+        self.m_mgr.Update()
+        self.Centre( wx.BOTH )
+
+    def __del__( self ):
+        self.m_mgr.UnInit()
+
 
 

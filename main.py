@@ -39,6 +39,9 @@ class JTAG(urjtag.chain):
     for inst in dev.instructions:
       if inst[0] == 'BYPASS': continue
       self.add_instruction(inst[0], inst[1], inst[2])
+
+    # Set the instruction to Bypass just to be sure
+    self.set_instruction('BYPASS')
     
     self.devs.append(dev) 
 
@@ -49,11 +52,14 @@ class JTAG(urjtag.chain):
 # Device mod dialog
 class DefineDevice(panels.DefineDevice):
   #constructor
-  def __init__(self,parent, dev):
+  def __init__(self,parent, dev, chain_length):
+    
     #initialize parent class
     panels.DefineDevice.__init__(self, parent)
-    self.dev = dev
+    self.SetTitle(u"Define unknown Device %s / %s" % (dev.chain_id+1, chain_length))
+    
     # Fill registers and instructions
+    self.dev = dev
     for reg in self.dev.registers:
       self.m_reg_list.AppendItem([reg[0], str(reg[1])])
     for inst in self.dev.instructions:
@@ -64,8 +70,8 @@ class DefineDevice(panels.DefineDevice):
 
   def regDrop( self, event ):
     selected = self.m_reg_list.GetSelectedRow()
-    reg = self.m_reg_list.GetItemData(selected)
-    id = [i for i, r in self.dev.registers if r[0] == reg[0]]
+    reg = self.m_reg_list.GetTextValue(selected,0)
+    id = [i for i, r in enumerate(self.dev.registers) if r[0] == reg]
     if len(id) != 0:
       del self.dev.registers[id[0]]
     self.m_reg_list.DeleteItem(selected)
@@ -108,7 +114,13 @@ class DefineDevice(panels.DefineDevice):
       self.dev.instructions[id[0]][2] = inst[2]
 
   def defDone( self, event ):
-    # TODO: Check if IR > 0
+    # Check if IR > 0
+    ir = [r for r in self.dev.registers if r[0] == 'IR']
+    if len(ir) == 0 or ir[0][1] <= 0:
+      wx.MessageBox(
+        "Please provide a valid (>0) IR length", caption="Invalid IR length",
+        style=wx.OK|wx.CENTRE)
+      return
     self.result = None
     self.Destroy()
 
@@ -161,34 +173,66 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.ch_root = self.m_chain.GetRootItem() # self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
     # Drop pins
     self.m_pinList.DeleteAllItems()
-    # Clear choice list
-    self.m_dev_choice.Clear()
-
+ 
   def addDev(self, device):
     # Add BSR definition
     device.addCells()
-    # Add devices to list 
-    self.m_dev_choice.Append(device.name)
     # Add device to tree list
     child = self.m_chain.AppendItem(self.ch_root, "Device %s" % device.chain_id)
-    self.m_chain.SetItemText(child, 1, device.name)
+    self.m_chain.SetItemText(child, 2, device.name)
 
     # Add registers
     regs_parent = self.m_chain.AppendItem(child, "Registers")
-    self.m_chain.SetItemText(regs_parent, 1, str(len(device.registers)))
+    self.m_chain.SetItemText(regs_parent, 2, str(len(device.registers)))
     for reg in device.registers:
       reg_ch = self.m_chain.AppendItem(regs_parent, str(reg[0]))
-      self.m_chain.SetItemText(reg_ch, 1, str(reg[1]))
+      self.m_chain.SetItemText(reg_ch, 2, str(reg[1]))
     
     # Instructions
     inst_parent = self.m_chain.AppendItem(child, "Instructions")
-    self.m_chain.SetItemText(inst_parent, 1, str(len(device.instructions)))
+    self.m_chain.SetItemText(inst_parent, 2, str(len(device.instructions)))
     for inst in device.instructions:
       inst_ch = self.m_chain.AppendItem(inst_parent, str(inst[0]))
-      self.m_chain.SetItemText(inst_ch, 1, str(inst[1]))
+      self.m_chain.SetItemText(inst_ch, 2, str(inst[1]))
+      if str(inst[0]) == 'BYPASS': self.m_chain.SetItemText(inst_ch, 1, '<')
 
-  def selectDev(self, event):
-    self.active_dev = self.m_dev_choice.GetSelection()
+  def instSet(self, event):
+    self.propCheck(event, True)
+
+  def propCheck(self, event=None, iset=False):
+    # check if new device and switch
+    inst_item = event.GetItem()
+    path = []
+    # Loop until root to find path
+    while inst_item.IsOk():
+      path.append(inst_item)
+      inst_item = self.m_chain.GetItemParent(inst_item)
+    # Get last-1 item, which holds the dev id
+    chk_dev = path[len(path) - 2]
+    dev_name = self.m_chain.GetItemText(chk_dev, 0)  
+    dev_id = int(dev_name.split(' ')[1])
+    if dev_id != self.active_dev:
+      self.selectDev(active_dev=dev_id)
+    # If in Instructions, select new instruction
+    # Check if path[1] is an instruction
+    if iset == False or len(path) < 4 or self.m_chain.GetItemText(path[1], 0) != 'Instructions': return
+    # Continue otherwise
+    # Clear inst indicator
+    iit = self.m_chain.GetFirstChild(path[1])
+    while iit.IsOk():
+      self.m_chain.SetItemText(iit, 1, '') 
+      iit = self.m_chain.GetNextSibling(iit)
+    # Set active instruction for the device
+    instr = self.m_chain.GetItemText(path[0], 0)
+    self.mainW.chain.part(self.active_dev)
+    self.mainW.chain.set_instruction(instr)
+    # Set instr indicator
+    self.m_chain.SetItemText(path[0], 1, '<')
+    self.m_bt_shift_ir.SetLabel('< Shift IR')
+
+
+  def selectDev(self, event=None, active_dev=None):
+    if active_dev is not None: self.active_dev = active_dev
     self.rightP.dev = self.mainW.chain.devs[self.active_dev]
 
     # Select dev in UrJTAG
@@ -221,11 +265,16 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.itemDataMap.append([data['pin_id'], data['port_name'], pin_type])
       index += 1
     
+  def shiftIR(self, event):
+    self.mainW.chain.shift_ir()
+    self.m_bt_shift_ir.SetLabel('Shift IR')
+    self.mainW.log('IR shifted')
+
   def getBSR(self, event):
     # Set IR to SAMPLE
     self.mainW.chain.part(self.active_dev)
-    self.mainW.chain.set_instruction('SAMPLE')
-    self.mainW.chain.shift_ir()
+    # self.mainW.chain.set_instruction('SAMPLE')
+    # self.mainW.chain.shift_ir()
     # Get BSR from device and update rightP
     self.mainW.chain.shift_dr()
     bsr = self.mainW.chain.get_dr_out_string()
@@ -339,7 +388,7 @@ class RightPanel(wx.Panel):
       
       # Draw circle 
       dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
-      dc.DrawCircle(pt[0] + 0.5 * width, pt[1] + 0.5 * width, 0.3 * width)
+      dc.DrawCircle(int(pt[0] + 0.5 * width), int(pt[1] + 0.5 * width), int(0.3 * width))
   
   def plotTQFP(self, dc, dev):
     npins = len(dev.pins)
@@ -538,14 +587,16 @@ class Mywin(panels.MainFrame):
         dev.addAST(db_bsdl[1])
         dev.inner_id = db_bsdl[0]
       else:
+        self.log("Unknown device IDCODE: %s" % dev_code)
         # No IR found, so we need to provide it manually
         dev.idcode = dev_code
         dev.addRegisters('IDCODE', 32)
         dev.addRegisters('IR', 0)
-        # dev.addInstructions('BYPASS', '1', 'BYPASS')
+        dev.addInstructions('BYPASS', '1', 'BYPASS')
         dev.name = "Unknown (%s)" % len(self.chain.devs)
-        self.askDevice(dev)
-        self.log("Unknown device IDCODE: %s" % dev_code)
+        # Ask for IR len
+        with DefineDevice(self, dev, found_chain) as dlg:
+          dlg.ShowModal()
       # Notice widgets about new device
       self.addDevice(dev)
 
@@ -554,11 +605,6 @@ class Mywin(panels.MainFrame):
     self.chain.addDev(dev)
     # Append device to left panel
     self.leftP.addDev(dev)
-
-
-  def askDevice(self, dev):
-    with DefineDevice(self, dev) as dlg:
-      dlg.ShowModal()
 
   def OnExit(self, evt):
     self.Close(True)  
