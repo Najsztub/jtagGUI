@@ -20,6 +20,8 @@ class DUT:
     self.registers = [["BYPASS", 1]]
     self.instructions = []
 
+    self.active_instruction = None
+
     self.bsr_def = ()
 
     if ast is not None:
@@ -39,9 +41,17 @@ class DUT:
     self.addRegisters()
     self.addInstructions()
 
-    # Create pin dict
+    # Create pin list and dict
     pins = self.ast['device_package_pin_mappings'][0]['pin_map']
-    plist = [{'pin_id': pn, 'port_name': p['port_name']} for p in pins for pn in p['pin_list']]
+    # Create pin(n) in case of multiple pins in 'pin_list'
+    plist = []
+    for p in pins:
+      if len(p['pin_list']) > 1:
+        # Loop over pins in 'pin_list'
+        for i, pn in enumerate(p['pin_list']):
+          plist.append({'pin_id': pn, 'port_name': '{0}({1})'.format(p['port_name'], i+1)})
+      else:
+        plist.append({'pin_id': p['pin_list'][0], 'port_name': p['port_name']})
 
     # For searching pins by port
     self.port_map = {}

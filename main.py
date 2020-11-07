@@ -4,6 +4,7 @@ import math
 import tatsu
 import string
 import re
+from datetime import datetime
 
 import panels
 from dut import DUT
@@ -19,16 +20,29 @@ class JTAG(urjtag.chain):
     #initialize parent class
     urjtag.chain.__init__(self)
     self.devs = []
+    self.active_dev = None
   
   def addDevs(self, dev_list):
     for dev in dev_list:
       self.addDev(dev)
+
+  def set_instruction(self, instr):
+    urjtag.chain.set_instruction(self, instr)
+    # TODO: Set active_insteuction for the selected device
+    self.devs[self.active_dev].active_instruction = instr
+
+  def part(self, id):
+    urjtag.chain.part(self, id)
+    self.active_dev = id
 
   def addDev(self, dev):
     # Add IR 
     ir_len = [r[1] for r in dev.registers if r[0] == "IR"][0]
     self.addpart(ir_len)
     self.part(len(self.devs))
+    
+    # Append to chain devices
+    self.devs.append(dev) 
     
     # Add registers to UrJTAG
     for reg in dev.registers:
@@ -43,7 +57,6 @@ class JTAG(urjtag.chain):
     # Set the instruction to Bypass just to be sure
     self.set_instruction('BYPASS')
     
-    self.devs.append(dev) 
 
   def __getitem__(self, id):
     return self.devs[id]
@@ -268,15 +281,17 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def shiftIR(self, event):
     self.mainW.chain.shift_ir()
     self.m_bt_shift_ir.SetLabel('Shift IR')
+    # TODO: Add time to log
     self.mainW.log('IR shifted')
 
   def getBSR(self, event):
     # Set IR to SAMPLE
-    self.mainW.chain.part(self.active_dev)
     # self.mainW.chain.set_instruction('SAMPLE')
     # self.mainW.chain.shift_ir()
     # Get BSR from device and update rightP
     self.mainW.chain.shift_dr()
+    self.mainW.chain.part(self.active_dev)
+    # TODO: Decide if BSR/other and act accordingly
     bsr = self.mainW.chain.get_dr_out_string()
     self.mainW.chain[self.active_dev].parseBSR(bsr)
     # Refresh pin image
@@ -372,9 +387,10 @@ class RightPanel(wx.Panel):
   def plotPin(self, dc, pin, pt, width):
     # Set fill colour depending on Pin name
     pin_color = self.mainW.PIN_COLS['oth']
-    if pin['port_name'] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
-    elif pin['port_name'] in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
-    elif pin['port_name'][0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
+    port = pin['port_name']
+    if port[0:3] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
+    elif port[0:3] in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
+    elif port[0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
     dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
 
     # Plot pin square
@@ -567,7 +583,7 @@ class Mywin(panels.MainFrame):
       return
     if found_chain > 1: self.log("Found %s devices." % found_chain)
     else: self.log("Found %s device." % found_chain)
-    # TODO: Clear leftP lists
+    # Clear leftP lists
     self.leftP.dropDevs()
     # Get ids and search in DB
     ids = ["{0:b}".format(self.chain.partid(id)).zfill(32) for id in range(found_chain)]
@@ -610,7 +626,8 @@ class Mywin(panels.MainFrame):
     self.Close(True)  
 
   def log(self, txt):
-    self.bottomP.m_textCtrl1.AppendText(txt + '\n')
+    line = '{0}: {1}\n'.format(str(datetime.now()).split('.')[0],  txt)
+    self.bottomP.m_textCtrl1.AppendText(line)
 
 
 if __name__ == "__main__":
