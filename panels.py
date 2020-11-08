@@ -153,6 +153,7 @@ class LeftPanel ( wx.Panel ):
         self.m_bt_get_dr.Bind( wx.EVT_BUTTON, self.shiftDR )
         self.m_chain.Bind( wx.dataview.EVT_TREELIST_ITEM_ACTIVATED, self.instSet )
         self.m_chain.Bind( wx.dataview.EVT_TREELIST_SELECTION_CHANGED, self.propCheck )
+        self.m_pinList.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.pinListRight )
 
     def __del__( self ):
         pass
@@ -169,6 +170,9 @@ class LeftPanel ( wx.Panel ):
         event.Skip()
 
     def propCheck( self, event ):
+        event.Skip()
+
+    def pinListRight( self, event ):
         event.Skip()
 
 

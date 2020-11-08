@@ -62,6 +62,31 @@ class JTAG(urjtag.chain):
     return self.devs[id]
 
 #######################################################################
+# Pin popup menu
+class PinSetup(wx.Menu):
+  def __init__(self, device, port):
+    super(PinSetup, self).__init__()
+      
+    self.device = device
+    self.port = port
+
+    high = wx.MenuItem(self, wx.NewId(), 'High 1')
+    self.Append(high)
+    self.Bind(wx.EVT_MENU, self.PinHigh, high)
+
+    low = wx.MenuItem(self, wx.NewId(), 'Low 0')
+    self.Append(low)
+    self.Bind(wx.EVT_MENU, self.PinLow, low)
+
+  def PinHigh(self, e):
+    self.device.setPort(self.port, 'write', '1')
+
+  def PinLow(self, e):
+    self.device.setPort(self.port, 'write', '0')
+    
+        
+
+#######################################################################
 # Device mod dialog
 class DefineDevice(panels.DefineDevice):
   #constructor
@@ -163,6 +188,7 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.m_pinList.AppendColumn("Pin")
     self.m_pinList.AppendColumn("Name")
     self.m_pinList.AppendColumn("Type")
+    self.m_pinList.AppendColumn("Set")
 
     # Add root to TreeList
     self.ch_root = self.m_chain.GetRootItem() # self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
@@ -243,7 +269,6 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.m_chain.SetItemText(path[0], 1, '<')
     self.m_bt_shift_ir.SetLabel('< Shift IR')
 
-
   def selectDev(self, event=None, active_dev=None):
     if active_dev is not None: self.active_dev = active_dev
     self.rightP.dev = self.mainW.chain.devs[self.active_dev]
@@ -274,8 +299,12 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       else:
         pin_type = '-'
       self.m_pinList.SetItem(index, 2, pin_type)
+      if 'write' in data:
+        set_val = data['write']
+      else: set_val = ''
+      self.m_pinList.SetItem(index, 3, set_val)
       self.m_pinList.SetItemData(index, key)
-      self.itemDataMap.append([data['pin_id'], data['port_name'], pin_type])
+      self.itemDataMap.append([data['pin_id'], data['port_name'], pin_type, set_val])
       index += 1
     
   def shiftIR(self, event):
@@ -300,6 +329,19 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.rightP.Refresh()
     else:
       self.log('DR: ' + dr)
+
+  def pinListRight(self, event):
+    # Pin right click
+    dev = self.mainW.chain[self.active_dev]
+    list_item_row = event.GetIndex()
+    port = self.m_pinList.GetItem(list_item_row, 1).GetText()
+    # Show item popup menu
+    self.m_pinList.PopupMenu(PinSetup(dev, port), event.GetPoint()) 
+    dev_port = dev.pins[dev.port_map[port][0]]
+    set_item = self.m_pinList.GetItem(list_item_row, 3)
+    set_item.SetText(dev_port['write'])
+    self.m_pinList.SetItem(set_item)
+    # self.m_pinList.Refresh()
 
 #######################################################################
 # Override BSDL repo dialog
