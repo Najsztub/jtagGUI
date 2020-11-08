@@ -73,6 +73,7 @@ class DUT:
           self.setPort(port, "port_group", group_id)
           self.setPort(port, "pin_type", gr['pin_type'])
           self.setPort(port, "read", '')
+          self.setPort(port, "write", '')
     
     # Make pins addressable by pin_id
     self.pin_dict = dict([(p[1]['pin_id'], p[0]) for p in enumerate(plist)])
@@ -81,6 +82,11 @@ class DUT:
     pid = [i for i, x in self.pins.items() if x['port_name'] == port] 
     for p in pid:
       self.pins[p][key] = value
+
+  def regLen(self, reg):
+    r_len = [r[1] for r in self.registers if r[0] == reg]
+    if len(r_len) == 0: return None
+    return r_len[0]
   
   def getID(self):
     if "idcode_register" not in self.ast["optional_register_description"]:
@@ -188,6 +194,36 @@ class DUT:
       id = c['cell_id']
       pin_id = self.port_map[port][0]
       self.pins[pin_id]['read'] = bsr[id]
+
+  def setBSR(self):
+    # TODO: Set BSR depending on pin['write'] state and cell control settings
+    bsr = ['0'] * len(self.bsr_cells)
+    nset = 0
+    for c in self.bsr_cells:
+      if c['function'].upper() not in ['INPUT', 'BIDIR', 'OUTPUT2', 'OUTPUT3']: continue
+      port = c['port_id']
+      pin_id = self.port_map[port][0]
+      out_val = self.pins[pin_id]['write']
+      if out_val != '': 
+        # Set the state of the pin + ctrl cell
+        bsr[c['cell_id']] = str(out_val)
+        nset += 1
+        # Inverse the control bit
+        if 'ctrl' not in c: continue
+        ccell_en = c['ctrl']["disable_value"]
+        if ccell_en == '1':
+          bsr[int(c['ctrl']["control_cell"])] = '0'
+        elif ccell_en == '0':
+          bsr[int(c['ctrl']["control_cell"])] = '1'
+        else: bsr[int(c['ctrl']["control_cell"])] = '0'
+      elif 'ctrl' in c:
+        # Inverse disable out cell
+        ccell_en = c['ctrl']["disable_value"]
+        bsr[int(c['ctrl']["control_cell"])] = ccell_en
+
+    bsr = ''.join(bsr)
+    return (nset, bsr)
+
 
 
   def readBSR(self, bsr):

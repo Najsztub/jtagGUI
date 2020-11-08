@@ -28,7 +28,7 @@ class JTAG(urjtag.chain):
 
   def set_instruction(self, instr):
     urjtag.chain.set_instruction(self, instr)
-    # TODO: Set active_insteuction for the selected device
+    # Set active_insteuction for the selected device
     self.devs[self.active_dev].active_instruction = instr
 
   def part(self, id):
@@ -183,7 +183,7 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def dropDevs(self):
     # Drop dev panel devices
     self.m_chain.DeleteAllItems()
-    self.ch_root = self.m_chain.GetRootItem() # self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
+    self.ch_root = self.m_chain.GetRootItem() 
     # Drop pins
     self.m_pinList.DeleteAllItems()
  
@@ -281,21 +281,25 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def shiftIR(self, event):
     self.mainW.chain.shift_ir()
     self.m_bt_shift_ir.SetLabel('Shift IR')
-    # TODO: Add time to log
+    # Add time to log
     self.mainW.log('IR shifted')
 
-  def getBSR(self, event):
-    # Set IR to SAMPLE
-    # self.mainW.chain.set_instruction('SAMPLE')
-    # self.mainW.chain.shift_ir()
+  def shiftDR(self, event):
+    # TODO: Set BSR out values
+    self.mainW.chain.part(self.active_dev)
+    set_bsr = self.mainW.chain[self.active_dev].setBSR()
+    if set_bsr[0] > 0:
+      self.mainW.chain.set_dr_in(set_bsr[1])
     # Get BSR from device and update rightP
     self.mainW.chain.shift_dr()
-    self.mainW.chain.part(self.active_dev)
-    # TODO: Decide if BSR/other and act accordingly
-    bsr = self.mainW.chain.get_dr_out_string()
-    self.mainW.chain[self.active_dev].parseBSR(bsr)
-    # Refresh pin image
-    self.rightP.Refresh()
+    # Decide if BSR/other and act accordingly
+    dr = self.mainW.chain.get_dr_out_string()
+    if len(dr) == self.mainW.chain[self.active_dev].regLen('BSR'):      
+      self.mainW.chain[self.active_dev].parseBSR(dr)
+      # Refresh pin image
+      self.rightP.Refresh()
+    else:
+      self.log('DR: ' + dr)
 
 #######################################################################
 # Override BSDL repo dialog
@@ -417,7 +421,6 @@ class RightPanel(wx.Panel):
     for i in range(npins):
       loc_dir = pt_dir[math.floor(i / side)]
       # Search for item based on on pin nr
-      # it = next((i for i, item in enumerate(dev.pins) if dev.pins.["name"] == "Pam"), None)
       try:
         it = dev.pins[dev.pin_dict[str(i+1)]]
       except KeyError:

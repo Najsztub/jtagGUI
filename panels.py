@@ -150,7 +150,7 @@ class LeftPanel ( wx.Panel ):
 
         # Connect Events
         self.m_bt_shift_ir.Bind( wx.EVT_BUTTON, self.shiftIR )
-        self.m_bt_get_dr.Bind( wx.EVT_BUTTON, self.getBSR )
+        self.m_bt_get_dr.Bind( wx.EVT_BUTTON, self.shiftDR )
         self.m_chain.Bind( wx.dataview.EVT_TREELIST_ITEM_ACTIVATED, self.instSet )
         self.m_chain.Bind( wx.dataview.EVT_TREELIST_SELECTION_CHANGED, self.propCheck )
 
@@ -162,7 +162,7 @@ class LeftPanel ( wx.Panel ):
     def shiftIR( self, event ):
         event.Skip()
 
-    def getBSR( self, event ):
+    def shiftDR( self, event ):
         event.Skip()
 
     def instSet( self, event ):
