@@ -70,11 +70,11 @@ class PinSetup(wx.Menu):
     self.device = device
     self.port = port
 
-    high = wx.MenuItem(self, wx.NewId(), 'High 1')
+    high = wx.MenuItem(self, wx.ID_ANY, 'High 1')
     self.Append(high)
     self.Bind(wx.EVT_MENU, self.PinHigh, high)
 
-    low = wx.MenuItem(self, wx.NewId(), 'Low 0')
+    low = wx.MenuItem(self, wx.ID_ANY, 'Low 0')
     self.Append(low)
     self.Bind(wx.EVT_MENU, self.PinLow, low)
 
@@ -316,11 +316,13 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   def shiftDR(self, event):
     # TODO: Set BSR out values
     self.mainW.chain.part(self.active_dev)
-    set_bsr = self.mainW.chain[self.active_dev].setBSR()
-    if set_bsr[0] > 0:
-      self.mainW.chain.set_dr_in(set_bsr[1])
+    in_bsr = self.mainW.chain[self.active_dev].setBSR()
+    if in_bsr[0] > 0:
+      self.mainW.chain.set_dr_in(in_bsr[1])
+
     # Get BSR from device and update rightP
     self.mainW.chain.shift_dr()
+
     # Decide if BSR/other and act accordingly
     dr = self.mainW.chain.get_dr_out_string()
     if len(dr) == self.mainW.chain[self.active_dev].regLen('BSR'):      
@@ -331,17 +333,20 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.log('DR: ' + dr)
 
   def pinListRight(self, event):
-    # Pin right click
+    # Pin right click setup
     dev = self.mainW.chain[self.active_dev]
     list_item_row = event.GetIndex()
-    port = self.m_pinList.GetItem(list_item_row, 1).GetText()
-    # Show item popup menu
-    self.m_pinList.PopupMenu(PinSetup(dev, port), event.GetPoint()) 
-    dev_port = dev.pins[dev.port_map[port][0]]
+    port_name = self.m_pinList.GetItem(list_item_row, 1).GetText()
+    dev_port = dev.pins[dev.port_map[port_name][0]]
+    
+    # Do nothing if type linkage or missing
+    if dev_port['pin_type'].lower() in ['-', 'linkage']: return
+
+    # Show item popup menu and update selected value
+    self.m_pinList.PopupMenu(PinSetup(dev, port_name), event.GetPoint()) 
     set_item = self.m_pinList.GetItem(list_item_row, 3)
     set_item.SetText(dev_port['write'])
     self.m_pinList.SetItem(set_item)
-    # self.m_pinList.Refresh()
 
 #######################################################################
 # Override BSDL repo dialog
