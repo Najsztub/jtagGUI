@@ -520,6 +520,11 @@ class Mywin(panels.MainFrame):
   def __init__(self, parent, title, parser = None): 
     panels.MainFrame.__init__(self, parent)  
 
+    # Set timer period to OFF :0 
+    self.dr_auto = 0
+    self.dr_auto_timer = None
+
+    # Setup BSDL parser
     self.parser = parser
  
     # Add JTAG chain container
@@ -568,7 +573,6 @@ class Mywin(panels.MainFrame):
     self.SetSizer(sizer)
 
     # wxFormBuilder generated code
-
     self.Show(True)
     
   #----------------------------------------------------------------------
@@ -672,6 +676,84 @@ class Mywin(panels.MainFrame):
     self.chain.addDev(dev)
     # Append device to left panel
     self.leftP.addDev(dev)
+
+  def shiftIR(self, event):
+    self.chain.shift_ir()
+    self.leftP.m_bt_shift_ir.SetLabel('Shift IR')
+    # Add time to log
+    self.log('IR shifted')
+
+  def shiftDR(self, event=None):
+    # TODO: Set BSR out values
+    active = self.leftP.active_dev
+    self.chain.part(active)
+    in_bsr = self.chain[active].setBSR()
+    if in_bsr[0] > 0:
+      self.chain.set_dr_in(in_bsr[1])
+
+    # Get BSR from device and update rightP
+    self.chain.shift_dr()
+
+    # Decide if BSR/other and act accordingly
+    dr = self.chain.get_dr_out_string()
+    if len(dr) == self.chain[active].regLen('BSR'):      
+      self.chain[active].parseBSR(dr)
+      # Refresh pin image
+      self.rightP.Refresh()
+    else:
+      self.log('DR: ' + dr)
+
+  def dr_timer_chng(self, event):
+    # Exit if no devices
+    if len(self.chain.devs) <= 0: return
+    # Define changing DR update timer period
+    widget = event.GetEventObject()
+    # Search in menu objects
+    caller = self.m_mauto.FindChildItem(event.GetId())
+    pos = caller[1]
+    if pos is None: return
+    # Set timer depending on selected menu item
+    elif pos == 0:
+      # 1s
+      self.dr_auto = 1000
+    elif pos == 1:
+      # 1/2s
+      self.dr_auto = 500
+    elif pos == 2:
+      # 1/4s
+      self.dr_auto = 250
+    elif pos == 3:
+      # 1/8s
+      self.dr_auto = 125
+    elif pos == 5:
+      # Turn off
+      self.dr_auto = 0
+
+    # Setup checks in menu
+    for mit in self.m_mauto.GetMenuItems():
+      if mit is caller[0]:
+        mit.Check(True)
+      elif mit.IsCheckable():
+        mit.Check(False)
+    
+    # Call timer
+    if self.dr_auto_timer is not None: 
+      self.dr_auto_timer.Stop()
+    self.dr_timer()
+
+
+  def dr_timer(self):
+    # Stop timer if self.dr_auto is 0
+    if self.dr_auto == 0: return
+
+    # call shitfDR
+    self.shiftDR()
+
+    # Call timer after self.dr_auto ms
+    if self.dr_auto_timer is None:
+      self.dr_auto_timer = wx.CallLater(self.dr_auto, self.dr_timer)
+    else:
+      self.dr_auto_timer.Start(self.dr_auto)
 
   def OnExit(self, evt):
     self.Close(True)  

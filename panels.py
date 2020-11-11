@@ -36,6 +36,35 @@ class MainFrame ( wx.Frame ):
         self.m_menubar1.Append( self.m_menu1, u"File" )
 
         self.m_menu2 = wx.Menu()
+        self.m_mch_sir = wx.MenuItem( self.m_menu2, wx.ID_ANY, u"Shift IR"+ u"\t" + u"CTRL+i", u"Shift IR", wx.ITEM_NORMAL )
+        self.m_menu2.Append( self.m_mch_sir )
+
+        self.m_mch_sdr = wx.MenuItem( self.m_menu2, wx.ID_ANY, u"Shift DR"+ u"\t" + u"CTRL+d", u"Shift DR", wx.ITEM_NORMAL )
+        self.m_menu2.Append( self.m_mch_sdr )
+
+        self.m_menu2.AppendSeparator()
+
+        self.m_mauto = wx.Menu()
+        self.m_mauto_1 = wx.MenuItem( self.m_mauto, wx.ID_ANY, u"1 s", wx.EmptyString, wx.ITEM_CHECK )
+        self.m_mauto.Append( self.m_mauto_1 )
+
+        self.m_mauto_2 = wx.MenuItem( self.m_mauto, wx.ID_ANY, u"1/2 s", wx.EmptyString, wx.ITEM_CHECK )
+        self.m_mauto.Append( self.m_mauto_2 )
+
+        self.m_mauto_4 = wx.MenuItem( self.m_mauto, wx.ID_ANY, u"1/4 s", wx.EmptyString, wx.ITEM_CHECK )
+        self.m_mauto.Append( self.m_mauto_4 )
+
+        self.m_mauto_8 = wx.MenuItem( self.m_mauto, wx.ID_ANY, u"1/8 s", wx.EmptyString, wx.ITEM_CHECK )
+        self.m_mauto.Append( self.m_mauto_8 )
+
+        self.m_mauto.AppendSeparator()
+
+        self.m_mauto_off = wx.MenuItem( self.m_mauto, wx.ID_ANY, u"Off", wx.EmptyString, wx.ITEM_CHECK )
+        self.m_mauto.Append( self.m_mauto_off )
+        self.m_mauto_off.Check( True )
+
+        self.m_menu2.AppendSubMenu( self.m_mauto, u"DR auto update" )
+
         self.m_menubar1.Append( self.m_menu2, u"Chain" )
 
         self.m_menu3 = wx.Menu()
@@ -71,6 +100,13 @@ class MainFrame ( wx.Frame ):
         # Connect Events
         self.Bind( wx.EVT_MENU, self.loadFile, id = self.m_load.GetId() )
         self.Bind( wx.EVT_MENU, self.OnExit, id = self.m_exit.GetId() )
+        self.Bind( wx.EVT_MENU, self.shiftIR, id = self.m_mch_sir.GetId() )
+        self.Bind( wx.EVT_MENU, self.shiftDR, id = self.m_mch_sdr.GetId() )
+        self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_1.GetId() )
+        self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_2.GetId() )
+        self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_4.GetId() )
+        self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_8.GetId() )
+        self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_off.GetId() )
         self.Bind( wx.EVT_MENU, self.editBSDLrepo, id = self.m_bsld_repo.GetId() )
         self.Bind( wx.EVT_TOOL, self.loadFile, id = self.m_t_open.GetId() )
         self.Bind( wx.EVT_TOOL, self.dropChain, id = self.m_chain_stop.GetId() )
@@ -87,6 +123,19 @@ class MainFrame ( wx.Frame ):
 
     def OnExit( self, event ):
         event.Skip()
+
+    def shiftIR( self, event ):
+        event.Skip()
+
+    def shiftDR( self, event ):
+        event.Skip()
+
+    def dr_timer_chng( self, event ):
+        event.Skip()
+
+
+
+
 
     def editBSDLrepo( self, event ):
         event.Skip()
