@@ -330,10 +330,11 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       # Refresh pin image
       self.rightP.Refresh()
     else:
-      self.log('DR: ' + dr)
+      self.mainW.log('DR: ' + dr)
 
   def pinListRight(self, event):
-    # Pin right click setup
+    # TODO: Allow for multiple pin selection and setting
+    # Pin right click
     dev = self.mainW.chain[self.active_dev]
     list_item_row = event.GetIndex()
     port_name = self.m_pinList.GetItem(list_item_row, 1).GetText()
@@ -502,10 +503,10 @@ class RightPanel(wx.Panel):
     dc.SetFont(font) 
     for i in range(side):
       # Row pin nr
-      dc.DrawText(chars[i], border - rec_b, math.ceil(rec_b * i + border))
+      dc.DrawText(chars[i], int(border - rec_b), math.ceil(rec_b * i + border))
       for j in range(side):
         # Col pin nr
-        if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), border - rec_b)
+        if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), int(border - rec_b))
         it = dev.pins[dev.pin_dict[chars[i] + str(j+1)]]
         # Draw pin
         pt =[math.ceil(border + rec_b * j), math.ceil(border + rec_b* i)]
