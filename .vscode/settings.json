@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "c:\\Users\\E7440\\Envs\\sci39\\Scripts\\python.exe",
+    "python.pythonPath": "/home/mateusz/.venv/electro/bin/python",
     "spellright.language": [
         "en"
     ],
