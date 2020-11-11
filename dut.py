@@ -23,6 +23,7 @@ class DUT:
     self.active_instruction = None
 
     self.bsr_def = ()
+    self.bsr_cells = None
 
     if ast is not None:
       self.addAST(ast)

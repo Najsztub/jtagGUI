@@ -329,22 +329,29 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     # Select dev in UrJTAG
     self.mainW.chain.part(self.active_dev)
 
-    # Add description in bottom status bar
-    self.mainW.m_statusBar1.SetStatusText(', '.join([
-      self.mainW.chain.devs[self.active_dev].name,
-      self.mainW.chain.devs[self.active_dev].package
-    ])) 
+    # Decide if BSR/other and act accordingly
+    if self.mainW.chain[self.active_dev].bsr_cells is not None:
+      dr = self.mainW.chain.get_dr_out_string()
+      if len(dr) == self.mainW.chain[self.active_dev].regLen('BSR'):      
+        self.mainW.chain[self.active_dev].parseBSR(dr)
 
     # Refresh pin image
     self.rightP.Refresh()
     
+    # Add description in bottom status bar
+    self.mainW.m_statusBar1.SetStatusText(', '.join([
+      self.mainW.chain[self.active_dev].name,
+      self.mainW.chain[self.active_dev].package
+    ])) 
+
     # Fill list with pin description
     self.m_pinList.DeleteAllItems()
     self.itemDataMap = [] 
+    
     # Make sure that we have any pins
-    if self.mainW.chain.devs[self.active_dev].pins is None: return
+    if self.mainW.chain[self.active_dev].pins is None: return
     index = 0
-    for key, data in self.mainW.chain.devs[self.active_dev].pins.items():
+    for key, data in self.mainW.chain[self.active_dev].pins.items():
       self.m_pinList.InsertItem(index, data['pin_id'])
       self.m_pinList.SetItem(index, 1, data['port_name'])
       if 'pin_type' in data:
@@ -361,29 +368,10 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       index += 1
     
   def shiftIR(self, event):
-    self.mainW.chain.shift_ir()
-    self.m_bt_shift_ir.SetLabel('Shift IR')
-    # Add time to log
-    self.mainW.log('IR shifted')
+    self.mainW.shiftIR(event)
 
   def shiftDR(self, event):
-    # TODO: Set BSR out values
-    self.mainW.chain.part(self.active_dev)
-    in_bsr = self.mainW.chain[self.active_dev].setBSR()
-    if in_bsr[0] > 0:
-      self.mainW.chain.set_dr_in(in_bsr[1])
-
-    # Get BSR from device and update rightP
-    self.mainW.chain.shift_dr()
-
-    # Decide if BSR/other and act accordingly
-    dr = self.mainW.chain.get_dr_out_string()
-    if len(dr) == self.mainW.chain[self.active_dev].regLen('BSR'):      
-      self.mainW.chain[self.active_dev].parseBSR(dr)
-      # Refresh pin image
-      self.rightP.Refresh()
-    else:
-      self.mainW.log('DR: ' + dr)
+    self.mainW.shiftDR(event)
 
   def pinListRight(self, event):
     # TODO: Allow for multiple pin selection and setting
@@ -669,6 +657,24 @@ class Mywin(panels.MainFrame):
     ])) 
 
   def dropChain(self, event):
+    # Stop timer
+    if self.dr_auto_timer is not None: 
+      self.dr_auto_timer.Stop()
+    self.dr_auto = 0
+    # Select OFF timer
+    timer_items = self.m_mauto.GetMenuItems()
+    for mit in timer_items:
+      if mit is timer_items[len(timer_items) - 1]:
+        mit.Check(True)
+      elif mit.IsCheckable():
+        mit.Check(False)
+    # Clear rightP
+    self.rightP.dev = None
+    self.rightP.Refresh()
+    # Clear left panel
+    self.leftP.active_dev = None
+    self.leftP.dropDevs()
+
     del self.chain 
     self.m_scan_tap.Disable()
   
@@ -737,9 +743,11 @@ class Mywin(panels.MainFrame):
     self.log('IR shifted')
 
   def shiftDR(self, event=None):
-    # TODO: Set BSR out values
+    #  BSR out values
     active = self.leftP.active_dev
     self.chain.part(active)
+    # Check if we have BSR cells defined
+    if self.chain[active].bsr_cells is None: return
     in_bsr = self.chain[active].setBSR()
     if in_bsr[0] > 0:
       self.chain.set_dr_in(in_bsr[1])
