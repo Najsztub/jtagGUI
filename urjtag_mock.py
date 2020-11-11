@@ -1,6 +1,7 @@
 # Mock UrJTAG module for GUI development without UrJTAG bindings
 # Examlpe 1 part chain with 1k59f256.bsd
 
+import sys
 import random
 
 class chain:
@@ -14,7 +15,7 @@ class chain:
     self.j_cable = j_cable
 
   def tap_detect(self):
-    pass
+    sys.stdout.write("Detected chain of 5")
 
   def len(self):
     return 5

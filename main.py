@@ -5,6 +5,10 @@ import tatsu
 import string
 import re
 from datetime import datetime
+# For showing stdout from UrJTAG in log
+# https://stackoverflow.com/questions/5136611/capture-stdout-from-a-script
+from contextlib import redirect_stdout
+from io import StringIO
 
 import panels
 from dut import DUT
@@ -34,6 +38,16 @@ class JTAG(urjtag.chain):
   def part(self, id):
     urjtag.chain.part(self, id)
     self.active_dev = id
+
+  def tap_detect(self):
+    # Capture output
+    f = StringIO()
+    with redirect_stdout(f):
+      urjtag.chain.tap_detect(self)
+    s = f.getvalue()
+    f.close()
+    return s
+
 
   def addDev(self, dev):
     # Add IR 
@@ -690,7 +704,8 @@ class Mywin(panels.MainFrame):
 
   def scanTAP(self, event):
     # Scan the chain and populate window with found devices
-    self.chain.tap_detect()
+    msg = self.chain.tap_detect()
+    if len(msg) > 0: self.log(msg, prefix='UrJTAG')
     found_chain = self.chain.len()
     if found_chain <= 0:
       self.log("No devices found.")
@@ -819,8 +834,11 @@ class Mywin(panels.MainFrame):
   def OnExit(self, evt):
     self.Close(True)  
 
-  def log(self, txt):
-    line = '{0}: {1}\n'.format(str(datetime.now()).split('.')[0],  txt)
+  def log(self, txt, prefix=''):
+    if prefix != '':
+      line = '{0}: {1}\n{2}\n'.format(str(datetime.now()).split('.')[0], prefix, txt)
+    else:
+      line = '{0}: {1}\n'.format(str(datetime.now()).split('.')[0],  txt)
     self.bottomP.m_textCtrl1.AppendText(line)
 
 
