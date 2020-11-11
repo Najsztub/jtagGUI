@@ -70,11 +70,11 @@ class PinSetup(wx.Menu):
     self.device = device
     self.port = port
 
-    high = wx.MenuItem(self, wx.NewId(), 'High 1')
+    high = wx.MenuItem(self, wx.ID_ANY, 'High 1')
     self.Append(high)
     self.Bind(wx.EVT_MENU, self.PinHigh, high)
 
-    low = wx.MenuItem(self, wx.NewId(), 'Low 0')
+    low = wx.MenuItem(self, wx.ID_ANY, 'Low 0')
     self.Append(low)
     self.Bind(wx.EVT_MENU, self.PinLow, low)
 
@@ -328,9 +328,10 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       # Refresh pin image
       self.rightP.Refresh()
     else:
-      self.log('DR: ' + dr)
+      self.mainW.log('DR: ' + dr)
 
   def pinListRight(self, event):
+    # TODO: Allow for multiple pin selection and setting
     # Pin right click
     dev = self.mainW.chain[self.active_dev]
     list_item_row = event.GetIndex()
@@ -497,10 +498,10 @@ class RightPanel(wx.Panel):
     dc.SetFont(font) 
     for i in range(side):
       # Row pin nr
-      dc.DrawText(chars[i], border - rec_b, math.ceil(rec_b * i + border))
+      dc.DrawText(chars[i], int(border - rec_b), math.ceil(rec_b * i + border))
       for j in range(side):
         # Col pin nr
-        if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), border - rec_b)
+        if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), int(border - rec_b))
         it = dev.pins[dev.pin_dict[chars[i] + str(j+1)]]
         # Draw pin
         pt =[math.ceil(border + rec_b * j), math.ceil(border + rec_b* i)]

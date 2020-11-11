@@ -7,6 +7,13 @@ This code presents an approach to combine 3 tools into a JTAG test chain visuali
 * [wxPython](https://www.wxpython.org/) for GUI interface.
 
 
+Current version allows for BSDL parsing and saving into an SQLite DB, device detection, pin mapping, SAMPLE instruction BSR reading and simple pin state setting.
+
+Example of the programme running on a real device below:
+
+![jtagGUI Screenshot](img/screenshot.png)
+
+This is just a demo for now. I will continue to add new features, so that I have a tool that is usefull for my own work.
 
 ### Installation and running
 
