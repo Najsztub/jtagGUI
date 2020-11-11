@@ -78,12 +78,18 @@ class PinSetup(wx.Menu):
     self.Append(low)
     self.Bind(wx.EVT_MENU, self.PinLow, low)
 
+    reset = wx.MenuItem(self, wx.ID_ANY, 'Reset')
+    self.Append(reset)
+    self.Bind(wx.EVT_MENU, self.PinReset, reset)
+
   def PinHigh(self, e):
     self.device.setPort(self.port, 'write', '1')
 
   def PinLow(self, e):
     self.device.setPort(self.port, 'write', '0')
     
+  def PinReset(self, e):
+    self.device.setPort(self.port, 'write', '')
         
 
 #######################################################################
@@ -94,12 +100,21 @@ class DefineDevice(panels.DefineDevice):
     
     #initialize parent class
     panels.DefineDevice.__init__(self, parent)
-    self.SetTitle(u"Define unknown Device %s / %s" % (dev.chain_id+1, chain_length))
+    title = 'Define unknown Device {} / {}, IDCODE: 0x{:02X}'.format(dev.chain_id+1, chain_length, int(dev.idcode, 2))
+    self.SetTitle(title)
     
-    # Fill registers and instructions
+    self.mainW = parent
+
     self.dev = dev
+
+    self.fillProps()
+    
+  def fillProps(self):
+    # Fill registers and instructions
+    self.m_reg_list.DeleteAllItems()
     for reg in self.dev.registers:
       self.m_reg_list.AppendItem([reg[0], str(reg[1])])
+    self.m_inst_list.DeleteAllItems()
     for inst in self.dev.instructions:
       self.m_inst_list.AppendItem(inst)
 
@@ -137,7 +152,6 @@ class DefineDevice(panels.DefineDevice):
       del self.dev.instructions[id[0]]
     self.m_inst_list.DeleteItem(selected)
 
-
   def instChange( self, event ):
     current = self.m_inst_list.GetSelectedRow()
     inst = [self.m_inst_list.GetTextValue(current,col) for col in range(3)]
@@ -150,6 +164,45 @@ class DefineDevice(panels.DefineDevice):
     else: 
       self.dev.instructions[id[0]][1] = inst[1]
       self.dev.instructions[id[0]][2] = inst[2]
+
+  def importBSDL(self, event):
+    # Add device from BSDL
+    # BSDL file loading dialog
+    openFileDialog = wx.FileDialog(self, "Open", "", "", 
+                                    "BSDL files (*.bsdl, *.bsd)|*.bsdl;*.bsd|All files (*.*)|*.*", 
+                                    wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+    if openFileDialog.ShowModal() == wx.ID_CANCEL:
+      return     # the user changed their mind
+    # Proceed loading the file chosen by the user
+    pathname = openFileDialog.GetPath()
+    ast = None
+    try:
+      ast = self.mainW.parser.parseBSDL(pathname)
+    except IOError:
+      wx.LogError("Cannot open file '%s'." % pathname)
+    except tatsu.exceptions.FailedToken:
+      self.mainW.log(', '.join(["BSDL error parsing ",  pathname]))
+    if ast is None:
+      wx.LogError("Could not parse BSDL definitions!")
+      openFileDialog.Destroy()
+      return
+    bsdl_dev = DUT(ast)
+    # Check if ID codes match
+    if bsdl_dev.idcode == self.dev.idcode:
+      # We have a match!
+      # Update dev with new values
+      self.dev.addAST(ast)
+      # Parse and fill props
+      self.fillProps()
+      # Add to BSDL repository
+      self.mainW.bsdl_repo.addBSDL(self.dev.getID(), name=self.dev.name, source=pathname, ast=ast)
+      self.mainW.log('Added %s to BSDL repository' % self.dev.name)
+      pass
+    else:
+      cmp = '0x{:02X} != 0x{:02X}'.format(int(self.dev.idcode, 2), int(bsdl_dev.idcode, 2))
+      wx.LogError("Device IDCODE does not match BSDL definition!\n" + cmp)
+    # Destroy dialog box
+    openFileDialog.Destroy()
 
   def defDone( self, event ):
     # Check if IR > 0
@@ -363,7 +416,7 @@ class BSDLRepo(panels.BSDLRepo):
     for row in self.data:
       self.m_bsdl_data.AppendItem(row[1:6])
 
-  def addBSDL( self, event ):
+  def addBSDL( self, event=None):
        # BSDL file loading dialog
     openFileDialog = wx.FileDialog(self, "Open", "", "", 
                                     "BSDL files (*.bsdl, *.bsd)|*.bsdl;*.bsd|All files (*.*)|*.*", 

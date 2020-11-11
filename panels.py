@@ -378,6 +378,9 @@ class DefineDevice ( wx.Dialog ):
 
         bSizer9.Add( self.m_staticText5, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
+        self.m_dev_bsdl = wx.Button( self, wx.ID_ANY, u"Import BSDL", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer9.Add( self.m_dev_bsdl, 0, wx.ALL, 5 )
+
         self.m_dev_ok = wx.Button( self, wx.ID_ANY, u"OK", wx.DefaultPosition, wx.DefaultSize, 0 )
         bSizer9.Add( self.m_dev_ok, 0, wx.ALL, 5 )
 
@@ -397,6 +400,7 @@ class DefineDevice ( wx.Dialog ):
         self.Bind( wx.EVT_TOOL, self.instAdd, id = self.m_i_add.GetId() )
         self.Bind( wx.EVT_TOOL, self.instDrop, id = self.m_i_del.GetId() )
         self.m_inst_list.Bind( wx.dataview.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.instChange, id = wx.ID_ANY )
+        self.m_dev_bsdl.Bind( wx.EVT_BUTTON, self.importBSDL )
         self.m_dev_ok.Bind( wx.EVT_BUTTON, self.defDone )
 
     def __del__( self ):
@@ -420,6 +424,9 @@ class DefineDevice ( wx.Dialog ):
         event.Skip()
 
     def instChange( self, event ):
+        event.Skip()
+
+    def importBSDL( self, event ):
         event.Skip()
 
     def defDone( self, event ):

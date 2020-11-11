@@ -38,6 +38,8 @@ class DUT:
     self.idcode = self.getID()
 
     # Discover regs and instructions
+    self.registers = [["BYPASS", 1]]
+    self.instructions = []
     self.addRegisters()
     self.addInstructions()
 
