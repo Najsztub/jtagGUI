@@ -338,7 +338,7 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
 
   def selectDev(self, event=None, active_dev=None):
     if active_dev is not None: self.active_dev = active_dev
-    self.rightP.dev = self.mainW.chain.devs[self.active_dev]
+    self.rightP.setDevice(self.mainW.chain.devs[self.active_dev])
 
     # Select dev in UrJTAG
     self.mainW.chain.part(self.active_dev)
@@ -464,9 +464,25 @@ class RightPanel(wx.Panel):
     self.leftP = None
     self.mainW = None
 
+    self.npins =  None
+    self.package = None
+  
     self.Bind(wx.EVT_SIZE, self.OnSize)
     self.Bind(wx.EVT_PAINT, self.OnPaint) 
     self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+
+  def setDevice(self, dev):
+    self.dev = dev
+    # Try to get number of pins from the package description
+    # Sometimes pins are not described and we end up with holes
+    if dev.pins is None:
+      self.npins = None
+      return
+    p_pins = re.search("[0-9]+$", dev.package)
+    if p_pins is not None:
+      self.npins = int(p_pins[0])
+    else:
+      self.npins = len(dev.pins)
 
   def OnSize(self, event):
     event.Skip()
@@ -474,7 +490,7 @@ class RightPanel(wx.Panel):
 
   # TODO: Add selected pin highligth
   # TODO: Add TQFP pin nr & labels
-  # TODO: Add pin meny/panel
+  # TODO: Add pin menu/panel
   
   def OnPaint(self, e): 
     self.imgx, self.imgy = self.GetClientSize()
@@ -492,8 +508,8 @@ class RightPanel(wx.Panel):
     
     # Get device package and draw appropriate pins
     pkg = self.dev.package
-    if bool(re.search("BGA", pkg)): self.plotBGA(dc, self.dev)
-    else: self.plotTQFP(dc, self.dev)
+    if bool(re.search("BGA", pkg)): self.plotBGA(dc)
+    else: self.plotTQFP(dc)
 
   def plotPin(self, dc, pin, pt, width):
     # TODO: Include write state in the picture
@@ -518,19 +534,18 @@ class RightPanel(wx.Panel):
       dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
       dc.DrawCircle(int(pt[0] + 0.5 * width), int(pt[1] + 0.5 * width), int(0.3 * width))
   
-  def plotTQFP(self, dc, dev):
-    npins = len(dev.pins)
-    side = math.ceil(npins / 4)
+  def plotTQFP(self, dc):
+    side = math.ceil(self.npins / 4)
     pt_dir = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     rec_b = min(self.imgx, self.imgy) * .8 / side
     pin_w = math.floor(rec_b)
     border = min(self.imgx, self.imgy) * 0.1
     coord = [border, border]
-    for i in range(npins):
+    for i in range(self.npins):
       loc_dir = pt_dir[math.floor(i / side)]
       # Search for item based on on pin nr
       try:
-        it = dev.pins[dev.pin_dict[str(i+1)]]
+        it = self.dev.pins[self.dev.pin_dict[str(i+1)]]
       except KeyError:
         it = {'port_name': 'GND', 'pin_type': 'GND', 'read': ''}
       # Draw rectangles for pins
@@ -551,9 +566,8 @@ class RightPanel(wx.Panel):
       # Draw pin
       self.plotPin(dc, it, pt, pin_w)
 
-  def plotBGA(self, dc, dev):
-    npins = len(dev.pins)
-    side = math.ceil(math.sqrt(npins))
+  def plotBGA(self, dc):
+    side = math.ceil(math.sqrt(self.npins))
     chars = [char for char in string.ascii_uppercase if char not in 'IOQS']
     rec_b = min(self.imgx, self.imgy) * .8 / side
     pin_w = math.floor(rec_b)
@@ -567,7 +581,7 @@ class RightPanel(wx.Panel):
       for j in range(side):
         # Col pin nr
         if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), int(border - rec_b))
-        it = dev.pins[dev.pin_dict[chars[i] + str(j+1)]]
+        it = self.dev.pins[self.dev.pin_dict[chars[i] + str(j+1)]]
         # Draw pin
         pt =[math.ceil(border + rec_b * j), math.ceil(border + rec_b* i)]
 

@@ -345,10 +345,10 @@
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_NORMAL</property>
-                    <property name="label"></property>
+                    <property name="label">Drop chain</property>
                     <property name="name">m_chain_stop</property>
                     <property name="permission">protected</property>
-                    <property name="statusbar"></property>
+                    <property name="statusbar">Drop chain</property>
                     <property name="tooltip">Stop JTAG chain</property>
                     <event name="OnToolClicked">dropChain</event>
                 </object>
@@ -531,11 +531,11 @@
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_NORMAL</property>
-                    <property name="label"></property>
+                    <property name="label">Connect device to chain</property>
                     <property name="name">m_chain_start</property>
                     <property name="permission">protected</property>
-                    <property name="statusbar"></property>
-                    <property name="tooltip">Start JTAG chin</property>
+                    <property name="statusbar">Connect device to chain</property>
+                    <property name="tooltip">Start JTAG chain</property>
                     <event name="OnToolClicked">attachChain</event>
                 </object>
                 <object class="wxButton" expanded="0">

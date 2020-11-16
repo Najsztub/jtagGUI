@@ -81,7 +81,7 @@ class MainFrame ( wx.Frame ):
 
         self.m_toolbar1.AddSeparator()
 
-        self.m_chain_stop = self.m_toolbar1.AddTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_CLOSE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Stop JTAG chain", wx.EmptyString, None )
+        self.m_chain_stop = self.m_toolbar1.AddTool( wx.ID_ANY, u"Drop chain", wx.ArtProvider.GetBitmap( wx.ART_CLOSE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Stop JTAG chain", u"Drop chain", None )
 
         m_cableChoices = [ u"Select cable" ]
         self.m_cable = wx.Choice( self.m_toolbar1, wx.ID_ANY, wx.DefaultPosition, wx.Size( 150,-1 ), m_cableChoices, wx.CB_SORT )
@@ -93,7 +93,7 @@ class MainFrame ( wx.Frame ):
         self.m_toolbar1.AddControl( self.m_staticText4 )
         self.m_cable_params = wx.TextCtrl( self.m_toolbar1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_toolbar1.AddControl( self.m_cable_params )
-        self.m_chain_start = self.m_toolbar1.AddTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chin", wx.EmptyString, None )
+        self.m_chain_start = self.m_toolbar1.AddTool( wx.ID_ANY, u"Connect device to chain", wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chain", u"Connect device to chain", None )
 
         self.m_scan_tap = wx.Button( self.m_toolbar1, wx.ID_ANY, u"Scan", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_scan_tap.Enable( False )
