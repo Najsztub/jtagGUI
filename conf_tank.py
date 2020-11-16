@@ -83,7 +83,7 @@ class BSDLtank:
 
   def getCodes(self, idcode):
     c = self.conn.cursor()
-    c.execute('SELECT id, zip_ast FROM bsdl WHERE idcode=? ORDER BY date_add DESC', (idcode, ))
+    c.execute("SELECT id, zip_ast FROM bsdl WHERE ? like replace(idcode, 'X', '_') ORDER BY date_add DESC", (idcode, ))
     bsdl = c.fetchone()
     # Convert 2nd item to Bool
     if bsdl is None:

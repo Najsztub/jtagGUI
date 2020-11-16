@@ -21,7 +21,7 @@ class DUTTestCase(unittest.TestCase):
         self.dev = DUT(ast)
 
     def test_IDCODE(self):
-        id = self.dev.getID()
+        id = self.dev.getBSDL_IDCODE()
         print(id)
         self.assertEqual(id, "00010001000001010000000011011101")
 

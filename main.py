@@ -202,18 +202,18 @@ class DefineDevice(panels.DefineDevice):
       return
     bsdl_dev = DUT(ast)
     # Check if ID codes match
-    if bsdl_dev.idcode == self.dev.idcode:
+    if bsdl_dev.cmpID(self.dev.idcode):
       # We have a match!
       # Update dev with new values
       self.dev.addAST(ast)
       # Parse and fill props
       self.fillProps()
       # Add to BSDL repository
-      self.mainW.bsdl_repo.addBSDL(self.dev.getID(), name=self.dev.name, source=pathname, ast=ast)
-      self.mainW.log('Added %s to BSDL repository' % self.dev.name)
+      self.mainW.bsdl_repo.addBSDL(bsdl_dev.getBSDL_IDCODE(), name=bsdl_dev.name, source=pathname, ast=ast)
+      self.mainW.log('Added %s to BSDL repository' % bsdl_dev.name)
       pass
     else:
-      cmp = '0x{:02X} != 0x{:02X}'.format(int(self.dev.idcode, 2), int(bsdl_dev.idcode, 2))
+      cmp = '0x{:02X} != 0b{}'.format(int(self.dev.idcode, 2), bsdl_dev.idcode)
       wx.LogError("Device IDCODE does not match BSDL definition!\n" + cmp)
     # Destroy dialog box
     openFileDialog.Destroy()
@@ -438,7 +438,7 @@ class BSDLRepo(panels.BSDLRepo):
     if ast is not None:
       dev = DUT(ast)
       # Upload info to DB
-      ret_data = self.bsdl_repo.addBSDL(dev.getID(), name=dev.name, source=pathname, ast=ast)
+      ret_data = self.bsdl_repo.addBSDL(dev.getBSDL_IDCODE(), name=dev.name, source=pathname, ast=ast)
       # Add to self.data and table
       self.data.append(ret_data)
       self.m_bsdl_data.AppendItem(ret_data[1:6])
@@ -471,6 +471,10 @@ class RightPanel(wx.Panel):
   def OnSize(self, event):
     event.Skip()
     self.Refresh()
+
+  # TODO: Add selected pin highligth
+  # TODO: Add TQFP pin nr & labels
+  # TODO: Add pin meny/panel
   
   def OnPaint(self, e): 
     self.imgx, self.imgy = self.GetClientSize()
@@ -492,6 +496,7 @@ class RightPanel(wx.Panel):
     else: self.plotTQFP(dc, self.dev)
 
   def plotPin(self, dc, pin, pt, width):
+    # TODO: Include write state in the picture
     # Set fill colour depending on Pin name
     pin_color = self.mainW.PIN_COLS['oth']
     port = pin['port_name']

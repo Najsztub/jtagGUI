@@ -36,7 +36,7 @@ class DUT:
     # Assign name, package and ID
     self.name = ''.join(self.ast["component_name"])
     self.package = self.ast["generic_parameter"]["default_device_package_type"]
-    self.idcode = self.getID()
+    if self.idcode is None: self.idcode = self.getBSDL_IDCODE()
 
     # Discover regs and instructions
     self.registers = [["BYPASS", 1]]
@@ -91,12 +91,25 @@ class DUT:
     if len(r_len) == 0: return None
     return r_len[0]
   
-  def getID(self):
+  def getBSDL_IDCODE(self):
     if "idcode_register" not in self.ast["optional_register_description"]:
       idcode = [''.join(reg["idcode_register"]) for reg in self.ast["optional_register_description"] if "idcode_register" in reg]
     else:
       idcode = [''.join(self.ast["optional_register_description"]["idcode_register"])]
     return idcode[0]
+
+  def cmpID(self, idcode):
+    if self.idcode is None: return False
+    # Include X in IDCODE
+    code_mask = [i for i, c in enumerate(self.getBSDL_IDCODE()) if c.upper() == 'X']
+    if len(code_mask) > 0:
+      dev_id = list(idcode)
+      for x in code_mask:
+        dev_id[x] = 'X'
+      dev_id = ''.join(dev_id)
+      return dev_id == self.getBSDL_IDCODE()
+    else: 
+      return idcode == self.getBSDL_IDCODE()
 
   def addRegisters(self, name=None, length=None):
     # Manually add registers or discover from AST
@@ -200,7 +213,7 @@ class DUT:
       self.pins[pin_id]['read'] = bsr[bsr_len - 1 - id]
 
   def setBSR(self):
-    # TODO: Set BSR depending on pin['write'] state and cell control settings
+    # Set BSR depending on pin['write'] state and cell control settings
     bsr_len = len(self.bsr_cells)
     bsr = ['0'] * bsr_len
     nset = 0
