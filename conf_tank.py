@@ -73,7 +73,7 @@ class BSDLtank:
   
   def getTab(self):
     c = self.conn.cursor()
-    c.execute('SELECT id, name, date_add, idcode,  source, IIF(zip_ast is not Null, 1, 0) as has_ast FROM bsdl')
+    c.execute('SELECT id, name, date_add, idcode,  source, CASE WHEN zip_ast is not NULL THEN 1 ELSE 0 END as has_ast FROM bsdl')
     bsdl = c.fetchall()
     # Convert 5th item to Bool
     for row_id in range(len(bsdl)):
@@ -83,7 +83,7 @@ class BSDLtank:
 
   def getCodes(self, idcode):
     c = self.conn.cursor()
-    c.execute("SELECT id, zip_ast FROM bsdl WHERE ? like replace(idcode, 'X', '_') ORDER BY date_add DESC", (idcode, ))
+    c.execute("SELECT id, zip_ast FROM bsdl WHERE ? LIKE REPLACE(idcode, 'X', '_') ORDER BY date_add DESC", (idcode, ))
     bsdl = c.fetchone()
     # Convert 2nd item to Bool
     if bsdl is None:
