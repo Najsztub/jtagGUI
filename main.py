@@ -728,7 +728,13 @@ class Mywin(panels.MainFrame):
               style=wx.OK|wx.CENTRE)
       return
     self.chain = JTAG()
-    self.chain.cable(self.m_cable.GetString(cid))
+    cable_args = [self.m_cable.GetString(cid)]
+    # Add arguments in case self.m_cable_params is not emply
+    opt_args = self.m_cable_params.GetValue()
+    if opt_args != '':
+      arg_list = re.findall("[^\s]+", re.sub("\s*=\s*", "=", opt_args))
+      cable_args += arg_list
+    self.chain.cable(*cable_args)
     self.m_scan_tap.Enable()
 
   def scanTAP(self, event):

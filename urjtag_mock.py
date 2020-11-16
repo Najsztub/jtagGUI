@@ -11,8 +11,8 @@ class chain:
     self.regs = {'BYPASS': 1}
     self.instructions = {}
 
-  def cable(self, j_cable):
-    self.j_cable = j_cable
+  def cable(self, *args):
+    self.j_cable = args[0]
 
   def tap_detect(self):
     sys.stdout.write("Detected chain of 5")
