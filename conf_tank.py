@@ -6,6 +6,13 @@ import json
 import os
 from datetime import datetime
 
+CABLES_DICT = [
+  "ARCOM", "ByteBlaster", "DLC5", "EA253", "EI012", "FT2232", "ARM-USB-OCD", "ARM-USB-OCD-H", "Flyswatter", "gnICE", "gnICE+", "JTAGkey", 
+  "JTAGv3", "JTAGv5", "KT-LINK", "milkymist", "OOCDLink-s", "Signalyzer", "Turtelizer2", "USB-JTAG-RS232", "usbScarab2", "USB-to-JTAG-IF", 
+  "DigilentHS1", "FT4232", "gpio", "ICE-100B", "IGLOO", "jlink", "KeithKoep", "Lattice", "Minimal", "MPCBDM", "TRITON", "UsbBlaster", 
+  "vsllink", "WIGGLER", "WIGGLER2", "xpc_ext", "xpc_int", "DirtyJTAG"
+]
+
 class BSDLtank:
   def __init__(self, db_file):
     self.db_file = db_file
@@ -28,6 +35,27 @@ class BSDLtank:
       name text, 
       zip_ast blob
     )""")
+    self.conn.commit()
+    c.execute("""
+    CREATE TABLE settings (
+      setting text PRIMARY KEY, 
+      value text
+    )
+    """)
+    self.conn.commit()
+
+  def getSetting(self, key=None):
+    c = self.conn.cursor()
+    if key is None:
+      c.execute('SELECT * FROM settings')
+      return c.fetchall()
+    else:
+      c.execute('SELECT value FROM settings where setting=?', (key,))
+      return c.fetchone()
+
+  def setSetting(self, key, value):
+    c = self.conn.cursor()
+    c.execute('REPLACE INTO settings (setting, value) VALUES(?, ?)', (key, value))
     self.conn.commit()
 
   def addBSDL(self, idcode, name=None, source=None, ast=None):
@@ -53,7 +81,6 @@ class BSDLtank:
     c = self.conn.cursor()
     c.execute('DELETE FROM bsdl WHERE id=?', (id,))
     self.conn.commit()
-
 
   def readBSDL(self, id):
     c = self.conn.cursor()

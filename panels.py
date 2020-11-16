@@ -76,22 +76,31 @@ class MainFrame ( wx.Frame ):
         self.SetMenuBar( self.m_menubar1 )
 
         self.m_toolbar1 = self.CreateToolBar( wx.TB_HORIZONTAL, wx.ID_ANY )
+        self.m_toolbar1.SetMargins( wx.Size( 1,1 ) )
         self.m_t_open = self.m_toolbar1.AddTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_FILE_OPEN,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Open BSDL file", wx.EmptyString, None )
 
         self.m_toolbar1.AddSeparator()
 
         self.m_chain_stop = self.m_toolbar1.AddTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_CLOSE,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Stop JTAG chain", wx.EmptyString, None )
 
-        m_cableChoices = [ u"Select device", u"usbblaster" ]
-        self.m_cable = wx.Choice( self.m_toolbar1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_cableChoices, 0 )
+        m_cableChoices = [ u"Select cable" ]
+        self.m_cable = wx.Choice( self.m_toolbar1, wx.ID_ANY, wx.DefaultPosition, wx.Size( 150,-1 ), m_cableChoices, wx.CB_SORT )
         self.m_cable.SetSelection( 0 )
         self.m_toolbar1.AddControl( self.m_cable )
+        self.m_staticText4 = wx.StaticText( self.m_toolbar1, wx.ID_ANY, u" Optional parameters: ", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText4.Wrap( -1 )
+
+        self.m_toolbar1.AddControl( self.m_staticText4 )
+        self.m_cable_params = wx.TextCtrl( self.m_toolbar1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_toolbar1.AddControl( self.m_cable_params )
         self.m_chain_start = self.m_toolbar1.AddTool( wx.ID_ANY, wx.EmptyString, wx.ArtProvider.GetBitmap( wx.ART_PLUS,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Start JTAG chin", wx.EmptyString, None )
 
         self.m_scan_tap = wx.Button( self.m_toolbar1, wx.ID_ANY, u"Scan", wx.DefaultPosition, wx.DefaultSize, 0 )
         self.m_scan_tap.Enable( False )
 
         self.m_toolbar1.AddControl( self.m_scan_tap )
+        self.m_cable_save = self.m_toolbar1.AddTool( wx.ID_ANY, u"Save cable", wx.ArtProvider.GetBitmap( wx.ART_HARDDISK,  ), wx.NullBitmap, wx.ITEM_NORMAL, u"Save cable as default during startup", u"Save cable as default", None )
+
         self.m_toolbar1.Realize()
 
 
@@ -112,6 +121,7 @@ class MainFrame ( wx.Frame ):
         self.Bind( wx.EVT_TOOL, self.dropChain, id = self.m_chain_stop.GetId() )
         self.Bind( wx.EVT_TOOL, self.attachChain, id = self.m_chain_start.GetId() )
         self.m_scan_tap.Bind( wx.EVT_BUTTON, self.scanTAP )
+        self.Bind( wx.EVT_TOOL, self.saveCable, id = self.m_cable_save.GetId() )
 
     def __del__( self ):
         pass
@@ -148,6 +158,9 @@ class MainFrame ( wx.Frame ):
         event.Skip()
 
     def scanTAP( self, event ):
+        event.Skip()
+
+    def saveCable( self, event ):
         event.Skip()
 
 
@@ -400,7 +413,6 @@ class DefineDevice ( wx.Dialog ):
         self.Bind( wx.EVT_TOOL, self.instAdd, id = self.m_i_add.GetId() )
         self.Bind( wx.EVT_TOOL, self.instDrop, id = self.m_i_del.GetId() )
         self.m_inst_list.Bind( wx.dataview.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.instChange, id = wx.ID_ANY )
-        self.m_dev_bsdl.Bind( wx.EVT_BUTTON, self.importBSDL )
         self.m_dev_ok.Bind( wx.EVT_BUTTON, self.defDone )
 
     def __del__( self ):
@@ -424,9 +436,6 @@ class DefineDevice ( wx.Dialog ):
         event.Skip()
 
     def instChange( self, event ):
-        event.Skip()
-
-    def importBSDL( self, event ):
         event.Skip()
 
     def defDone( self, event ):
@@ -455,12 +464,12 @@ class BSDLEditor ( wx.Frame ):
         self.m_mgr.AddPane( self.m_auinotebook2, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
 
 
+        # WARNING: wxPython code generation isn't supported for this widget yet.
+        self.m_scintilla1 = wx.Window( self )
+        self.m_mgr.AddPane( self.m_scintilla1, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
+
         self.m_listbook1 = wx.Listbook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LB_DEFAULT )
         self.m_mgr.AddPane( self.m_listbook1, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
-
-
-        self.m_auinotebook3 = wx.aui.AuiNotebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.aui.AUI_NB_DEFAULT_STYLE )
-        self.m_mgr.AddPane( self.m_auinotebook3, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
 
 
 

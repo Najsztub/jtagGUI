@@ -15,7 +15,7 @@ from dut import DUT
 import bsdl_parser
 import urjtag_mock as urjtag
 # import urjtag
-from conf_tank import BSDLtank
+from conf_tank import BSDLtank, CABLES_DICT
 
 #######################################################################
 # Override UrJTAG class to include DUT processing
@@ -632,8 +632,32 @@ class Mywin(panels.MainFrame):
     sizer.Add(splitMain, 1, wx.EXPAND)
     self.SetSizer(sizer)
 
+    # Populate with cables 
+    for c in CABLES_DICT:
+      self.m_cable.Append(c)
+
+    # Add defult cable if in settings
+    cable = self.bsdl_repo.getSetting('cable.name')
+    if cable is not None:
+      # Select default cable and params
+      cab_name = self.m_cable.FindString(cable[0])
+      self.m_cable.SetSelection(cab_name)
+      cab_params = self.bsdl_repo.getSetting('cable.params')
+      if cab_params is not None:
+        self.m_cable_params.SetValue(cab_params[0])
+
     # wxFormBuilder generated code
     self.Show(True)
+
+  def saveCable(self, event):
+    cid = self.m_cable.GetSelection()
+    if cid <= 0:
+      wx.MessageBox("Please select a UrJTAG cable", caption="Invalid cable",
+              style=wx.OK|wx.CENTRE)
+      return
+    self.bsdl_repo.setSetting('cable.name', self.m_cable.GetString(cid))
+    self.bsdl_repo.setSetting('cable.params', self.m_cable_params.GetValue())
+    self.log("Cable %s saved as default." % self.m_cable.GetString(cid))
     
   #----------------------------------------------------------------------
   def editBSDLrepo(self, event):
