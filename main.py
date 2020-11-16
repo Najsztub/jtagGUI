@@ -516,9 +516,10 @@ class RightPanel(wx.Panel):
     # Set fill colour depending on Pin name
     pin_color = self.mainW.PIN_COLS['oth']
     port = pin['port_name']
-    if port[0:3] == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
-    elif port[0:3] in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
-    elif port[0:2] == 'IO':  pin_color = self.mainW.PIN_COLS['io']
+    if port[0:3].upper() == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
+    elif port[0:3].upper() in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
+    elif port[0:2].upper() == 'IO':  pin_color = self.mainW.PIN_COLS['io']
+    elif port[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = self.mainW.PIN_COLS['jtag']
     dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
 
     # Plot pin square
@@ -611,6 +612,7 @@ class Mywin(panels.MainFrame):
       'vcc': wx.Colour(255,0,0),
       'gnd': wx.Colour(10,10,10),
       'io' : wx.Colour(240,240,240),
+      'jtag' : wx.Colour(255, 204, 102),
       'oth' : wx.Colour(150,150,220),
       'io_1': wx.Colour(200,0 , 0),
       'io_0': wx.Colour(255,255,255),

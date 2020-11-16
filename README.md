@@ -13,7 +13,7 @@ Example of the programme running on a real device below:
 
 ![jtagGUI Screenshot](img/screenshot.png)
 
-This is just a demo for now. I will continue to add new features, so that I have a tool that is usefull for my own work.
+This is just a demo for now. I will continue to add new features, so that I have a tool that is useful for my own work.
 
 ### Installation and running
 
@@ -21,7 +21,7 @@ This software was developed under Python 3.9. And uses the mentioned above packa
 
 For development I use a UrJTAG mock class, so I don't have to connect real device for feature testing. For now on whenever I want to switch I have to uncomment `# include urjtag` in the `main.py` and comment `import urjtag_mock as urjtag`. This needs a cleaner version.
 
-I used it together with a STM32 USBBlaster clone (e.g. [DirtyJTAG](https://github.com/jeanthom/DirtyJTAG)) for interfacing with JTAG, but any of the probes supported by UrJTAG should work. For the time being only the former is implemented (hard-coded).
+I used it together with a STM32 USBBlaster clone (e.g. [DirtyJTAG](https://github.com/jeanthom/DirtyJTAG)) for interfacing with JTAG, but any of the probes supported by UrJTAG should work. the dropdown list allows to select a probe as listen in the `help cable` listing in UrJTAG.
 
 Device discovery is based on BSDL files that are parsed and saved in local SQLite DB. They can be added and removed to the repository accessible in the `Tools` menu.
 
