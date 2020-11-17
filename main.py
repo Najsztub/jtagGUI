@@ -484,6 +484,23 @@ class RightPanel(wx.Panel):
     else:
       self.npins = len(dev.pins)
 
+    # Package specific parsing
+    pkg = self.dev.package
+    if bool(re.search("BGA", pkg)): 
+      self.pkg = 'BGA'
+      # Make sure that we include 'holes' in BGA
+      pin_names = self.dev.pin_dict.keys()
+      pin_gr = [re.match('([A-Za-z]+)([0-9]+)', k).groups() for k in pin_names]
+      # Sort rows
+      rows = list(set([pt[0] for pt in pin_gr]))
+      chars = dict([(k, i) for i,k in enumerate(string.ascii_uppercase)])
+      rows = sorted(rows, key = lambda st: sum([pow(26, len(st)-i-1) * (chars[c.upper()]+1) for i,c in enumerate(st)]))
+      self.bga_rows = rows
+      cols = set([int(pt[1]) for pt in pin_gr])
+      self.npins = len(rows) * len(cols)
+    else: 
+      self.pkg = 'FP'
+
   def OnSize(self, event):
     event.Skip()
     self.Refresh()
@@ -508,7 +525,7 @@ class RightPanel(wx.Panel):
     
     # Get device package and draw appropriate pins
     pkg = self.dev.package
-    if bool(re.search("BGA", pkg)): self.plotBGA(dc)
+    if self.pkg == 'BGA': self.plotBGA(dc)
     else: self.plotTQFP(dc)
 
   def plotPin(self, dc, pin, pt, width):
@@ -519,6 +536,7 @@ class RightPanel(wx.Panel):
     if port[0:3].upper() == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
     elif port[0:3].upper() in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
     elif port[0:2].upper() == 'IO':  pin_color = self.mainW.PIN_COLS['io']
+    elif port.upper() == 'MISSING':  pin_color = self.mainW.PIN_COLS['nc']
     elif port[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = self.mainW.PIN_COLS['jtag']
     dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
 
@@ -548,7 +566,7 @@ class RightPanel(wx.Panel):
       try:
         it = self.dev.pins[self.dev.pin_dict[str(i+1)]]
       except KeyError:
-        it = {'port_name': 'GND', 'pin_type': 'GND', 'read': ''}
+        it = {'port_name': 'MISSING', 'pin_type': 'NC', 'read': ''}
       # Draw rectangles for pins
       # Move pins 1 unit, so they do not overlap in corners
       if ( math.floor(i / side) == 2):
@@ -569,7 +587,6 @@ class RightPanel(wx.Panel):
 
   def plotBGA(self, dc):
     side = math.ceil(math.sqrt(self.npins))
-    chars = [char for char in string.ascii_uppercase if char not in 'IOQS']
     rec_b = min(self.imgx, self.imgy) * .8 / side
     pin_w = math.floor(rec_b)
     border = min(self.imgx, self.imgy) * 0.1
@@ -578,11 +595,14 @@ class RightPanel(wx.Panel):
     dc.SetFont(font) 
     for i in range(side):
       # Row pin nr
-      dc.DrawText(chars[i], int(border - rec_b), math.ceil(rec_b * i + border))
+      dc.DrawText(self.bga_rows[i], int(border - rec_b), math.ceil(rec_b * i + border))
       for j in range(side):
         # Col pin nr
         if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), int(border - rec_b))
-        it = self.dev.pins[self.dev.pin_dict[chars[i] + str(j+1)]]
+        try:
+          it = self.dev.pins[self.dev.pin_dict[self.bga_rows[i] + str(j+1)]]
+        except KeyError:
+          it = {'port_name': 'MISSING', 'pin_type': 'NC', 'read': ''}
         # Draw pin
         pt =[math.ceil(border + rec_b * j), math.ceil(border + rec_b* i)]
 
@@ -614,6 +634,7 @@ class Mywin(panels.MainFrame):
       'io' : wx.Colour(240,240,240),
       'jtag' : wx.Colour(255, 204, 102),
       'oth' : wx.Colour(150,150,220),
+      'nc' : wx.Colour(255, 255, 255),
       'io_1': wx.Colour(200,0 , 0),
       'io_0': wx.Colour(255,255,255),
       'io_z': wx.Colour(128, 128, 128)

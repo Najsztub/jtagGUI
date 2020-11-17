@@ -44,15 +44,27 @@ class DUT:
     self.addRegisters()
     self.addInstructions()
 
+    # Create port list first
+    ports = []
+    if self.ast["logical_port_description"] is not None:
+      for group_id, gr in enumerate(self.ast["logical_port_description"]):
+        for port in gr["identifier_list"]: 
+          ports.append([port, gr['port_dimension']])
+
     # Create pin list and dict
-    pins = self.ast['device_package_pin_mappings'][0]['pin_map']
+    pin_map = self.ast['device_package_pin_mappings'][0]['pin_map']
     # Create pin(n) in case of multiple pins in 'pin_list'
     plist = []
-    for p in pins:
+    for p in pin_map:
       if len(p['pin_list']) > 1:
         # Loop over pins in 'pin_list'
+        # Search for port name in self.ast["logical_port_description"] 
+        port_dim = [pt[1] for pt in ports if pt[0] == p["port_name"]]
+        start = 1
+        if len(port) > 0 and ( "bit_vector" in port_dim[0]):
+          start = int(port_dim[0]["bit_vector"][0])
         for i, pn in enumerate(p['pin_list']):
-          plist.append({'pin_id': pn, 'port_name': '{0}({1})'.format(p['port_name'], i+1)})
+          plist.append({'pin_id': pn, 'port_name': '{0}({1})'.format(p['port_name'], i+start)})
       else:
         plist.append({'pin_id': p['pin_list'][0], 'port_name': p['port_name']})
 
@@ -72,11 +84,21 @@ class DUT:
     # Add port logic
     if self.ast["logical_port_description"] is not None:
       for group_id, gr in enumerate(self.ast["logical_port_description"]):
-        for port in gr["identifier_list"]:
-          self.setPort(port, "port_group", group_id)
-          self.setPort(port, "pin_type", gr['pin_type'])
-          self.setPort(port, "read", '')
-          self.setPort(port, "write", '')
+        # Add "bit_vector" () valueif bit_vector in dir
+        if  "bit_vector" in gr['port_dimension']:
+          for pid in range(int(gr['port_dimension']["bit_vector"][0]), int(gr['port_dimension']["bit_vector"][2])+1):
+            port_name_id = '{0}({1})'.format(gr["identifier_list"][0], pid)
+            self.setPort(port_name_id, "port_group", group_id)
+            self.setPort(port_name_id, "pin_type", gr['pin_type'])
+            self.setPort(port_name_id, "read", '')
+            self.setPort(port_name_id, "write", '')
+          continue
+        # Else loo over names
+        for port_id, port_name in enumerate(gr["identifier_list"]):
+          self.setPort(port_name, "port_group", group_id)
+          self.setPort(port_name, "pin_type", gr['pin_type'])
+          self.setPort(port_name, "read", '')
+          self.setPort(port_name, "write", '')
     
     # Make pins addressable by pin_id
     self.pin_dict = dict([(p[1]['pin_id'], p[0]) for p in enumerate(plist)])
@@ -198,11 +220,13 @@ class DUT:
     for cell in ast_cells:
       cell_id = int(cell["cell_number"])
       cell_spec = cell['cell_info']["cell_spec"]
+      # Collapse port name
+      cell_spec['port_id'] = ''.join(cell_spec['port_id'])
       cell_spec['cell_id'] = cell_id
       if "input_or_disable_spec" in cell['cell_info']: cell_spec['ctrl'] = cell['cell_info']["input_or_disable_spec"]
       self.bsr_cells[cell_id] = cell_spec
 
-    self.bsr_in_cells = [c for c in self.bsr_cells if c['function'].upper() in ['INPUT', 'CLOCK', 'BIDIR']]
+    self.bsr_in_cells = [c for c in self.bsr_cells if c['function'].upper() in ['INPUT', 'CLOCK', 'BIDIR', 'OUTPUT2', 'OUTPUT3']]
 
   def parseBSR(self, bsr):
     bsr_len = len(self.bsr_cells)
