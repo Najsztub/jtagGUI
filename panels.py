@@ -413,6 +413,7 @@ class DefineDevice ( wx.Dialog ):
         self.Bind( wx.EVT_TOOL, self.instAdd, id = self.m_i_add.GetId() )
         self.Bind( wx.EVT_TOOL, self.instDrop, id = self.m_i_del.GetId() )
         self.m_inst_list.Bind( wx.dataview.EVT_DATAVIEW_ITEM_VALUE_CHANGED, self.instChange, id = wx.ID_ANY )
+        self.m_dev_bsdl.Bind( wx.EVT_BUTTON, self.importBSDL )
         self.m_dev_ok.Bind( wx.EVT_BUTTON, self.defDone )
 
     def __del__( self ):
@@ -436,6 +437,9 @@ class DefineDevice ( wx.Dialog ):
         event.Skip()
 
     def instChange( self, event ):
+        event.Skip()
+
+    def importBSDL( self, event ):
         event.Skip()
 
     def defDone( self, event ):

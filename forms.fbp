@@ -1865,6 +1865,7 @@
                                 <property name="window_extra_style"></property>
                                 <property name="window_name"></property>
                                 <property name="window_style"></property>
+                                <event name="OnButtonClick">importBSDL</event>
                             </object>
                         </object>
                         <object class="sizeritem" expanded="0">
