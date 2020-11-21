@@ -16,7 +16,7 @@ class DUTTestCase(unittest.TestCase):
 
     def setUp(self):
         self.log = logging.getLogger("DUT: ")
-        self.parser = bsdl_parser.Parser('bsdl.ebnf')
+        self.parser = bsdl_parser.Parser('bsdl/bsdl.ebnf')
         ast = self.parser.parseBSDL('bsdl/1k50f256.bsd')
         self.dev = DUT(ast)
 

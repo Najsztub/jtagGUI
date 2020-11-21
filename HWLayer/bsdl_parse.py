@@ -8,7 +8,7 @@ import tatsu
 
 if __name__ == "__main__":
     
-    grammar = open('bsdl.ebnf').read()
+    grammar = open('bsdl/bsdl.ebnf').read()
     # tatsu.to_python_sourcecode(grammar)
     bsdl_model = tatsu.compile(grammar)
 

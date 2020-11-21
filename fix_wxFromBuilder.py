@@ -11,6 +11,6 @@ if __name__ == "__main__":
         fout.write(line)
     
     fout.close()
-    os.remove('panels.py')
-    os.rename('panels_fix.py', 'panels.py')
+    os.remove('Panels/panels.py')
+    os.rename('panels_fix.py', 'Panels/panels.py')
 
