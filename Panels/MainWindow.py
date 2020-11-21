@@ -1,15 +1,18 @@
-import wx 
-import wx.lib.mixins.listctrl as listmix
-import math
+import wx
 import tatsu
-import string
 import re
 from datetime import datetime
 
 import Panels.panels as panels
 
-from Panels import LeftPanel, RightPanel, BSDLRepo, BottomPanel, DefineDevice
-from HWLayer import JTAG, dut as DUT
+from Panels.LeftPanel import LeftPanel
+from Panels.RightPanel import RightPanel
+from Panels.BSDLRepo import BSDLRepo
+from Panels.BottomPanel import BottomPanel
+from Panels.DefineDevice import DefineDevice
+
+from HWLayer.JTAG import JTAG
+from HWLayer.dut import DUT
 
 # import urjtag
 from HWLayer.conf_tank import BSDLtank, CABLES_DICT
@@ -51,8 +54,8 @@ class Mywin(panels.MainFrame):
     splitV = wx.SplitterWindow(splitMain)
 
     # Create top L&R panels
-    self.leftP = LeftPanel.LeftPanel(splitV)
-    self.rightP = RightPanel.RightPanel(splitV)
+    self.leftP = LeftPanel(splitV)
+    self.rightP = RightPanel(splitV)
 
     # Add pointer to left panel
     self.leftP.mainW = self
@@ -67,7 +70,7 @@ class Mywin(panels.MainFrame):
     splitV.SetSashGravity(0.1)
 
     # Add bottom panel
-    self.bottomP = BottomPanel.BottomPanel(splitMain)
+    self.bottomP = BottomPanel(splitMain)
     splitMain.SplitHorizontally(splitV, self.bottomP)
     splitMain.SetSashGravity(0.9)
 
@@ -104,7 +107,7 @@ class Mywin(panels.MainFrame):
     
   #----------------------------------------------------------------------
   def editBSDLrepo(self, event):
-    dlg = BSDLRepo.BSDLRepo(self)
+    dlg = BSDLRepo(self)
     dlg.Show(True)
   
   #----------------------------------------------------------------------
@@ -129,7 +132,7 @@ class Mywin(panels.MainFrame):
     # Parse BSDL file
     try:
       ast = self.parser.parseBSDL(file)
-      dev = DUT.DUT(ast)
+      dev = DUT(ast)
       # self.addDev(dev)
       self.m_statusBar1.SetStatusText(file, 1) 
     except tatsu.exceptions.FailedToken:
@@ -170,7 +173,7 @@ class Mywin(panels.MainFrame):
       wx.MessageBox("Please select a UrJTAG cable", caption="Invalid cable",
               style=wx.OK|wx.CENTRE)
       return
-    self.chain = JTAG.JTAG()
+    self.chain = JTAG()
     cable_args = [self.m_cable.GetString(cid)]
     # Add arguments in case self.m_cable_params is not emply
     opt_args = self.m_cable_params.GetValue()
@@ -196,13 +199,13 @@ class Mywin(panels.MainFrame):
     ids = ["{0:b}".format(self.chain.partid(id)).zfill(32) for id in range(found_chain)]
     # Reset chain
     del self.chain
-    self.chain = JTAG.JTAG()
+    self.chain = JTAG()
     self.chain.cable(self.m_cable.GetString(self.m_cable.GetSelection()))
 
     # Fill devices
     for dev_code in ids:
       # Populate app with devices
-      dev = DUT.DUT(idcode=dev_code)
+      dev = DUT(idcode=dev_code)
       dev.chain_id = len(self.chain.devs)
       # Search for IDCODE in DB
       db_bsdl = self.bsdl_repo.getCodes(dev_code)

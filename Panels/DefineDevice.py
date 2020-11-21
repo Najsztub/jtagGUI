@@ -2,7 +2,7 @@ import wx
 import tatsu
 from Panels import panels
 
-from HWLayer import dut as DUT
+from HWLayer.dut import DUT
 
 #######################################################################
 # Device mod dialog
@@ -98,7 +98,7 @@ class DefineDevice(panels.DefineDevice):
       wx.LogError("Could not parse BSDL definitions!")
       openFileDialog.Destroy()
       return
-    bsdl_dev = DUT.DUT(ast)
+    bsdl_dev = DUT(ast)
     # Check if ID codes match
     if bsdl_dev.cmpID(self.dev.idcode):
       # We have a match!

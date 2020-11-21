@@ -1,7 +1,7 @@
 import wx
 import tatsu
 from Panels import panels
-from HWLayer import dut as DUT
+from HWLayer.dut import DUT
 
 #######################################################################
 # Override BSDL repo dialog
@@ -35,7 +35,7 @@ class BSDLRepo(panels.BSDLRepo):
     except tatsu.exceptions.FailedToken:
       self.parent.log(', '.join(["BSDL error parsing ",  pathname]))
     if ast is not None:
-      dev = DUT.DUT(ast)
+      dev = DUT(ast)
       # Upload info to DB
       ret_data = self.bsdl_repo.addBSDL(dev.getBSDL_IDCODE(), name=dev.name, source=pathname, ast=ast)
       # Add to self.data and table
