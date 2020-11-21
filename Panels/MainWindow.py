@@ -14,7 +14,6 @@ from Panels.DefineDevice import DefineDevice
 from HWLayer.JTAG import JTAG
 from HWLayer.dut import DUT
 
-# import urjtag
 from HWLayer.conf_tank import BSDLtank, CABLES_DICT
 
 

@@ -5,7 +5,7 @@ import os
 
 if __name__ == "__main__":
     fout = open('panels_fix.py', 'w')
-    for line in fileinput.input("panels.py", inplace=True):
+    for line in fileinput.input("Panels/panels.py", inplace=True):
         line = line.replace("wx.DATAVIEW", "wx.dataview.DATAVIEW")
         line = line.replace(".AddLabelTool", ".AddTool")
         fout.write(line)

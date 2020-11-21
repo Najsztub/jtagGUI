@@ -1,4 +1,9 @@
-from HWLayer import urjtag_mock as urjtag
+import sys
+
+if len(sys.argv) > 1 and sys.argv[1] == "DEBUG":
+  from HWLayer import urjtag_mock as urjtag
+else:
+  import urjtag
 
 # For showing stdout from UrJTAG in log
 # https://stackoverflow.com/questions/5136611/capture-stdout-from-a-script

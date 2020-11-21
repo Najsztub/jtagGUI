@@ -1,6 +1,2 @@
-*.pyc
+*.py[cod]
 .vscode/*
-__pycache__/*
-Panels/__pycache__/*
-HWLayer/__pycache__/*
-.vscode/settings.json
