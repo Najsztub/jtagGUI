@@ -9,7 +9,7 @@ This code presents an approach to combine 3 tools into a JTAG test chain visuali
 
 Current version allows for BSDL parsing and saving into an SQLite DB, device detection, pin mapping, SAMPLE instruction BSR reading and simple pin state setting.
 
-Example of the programme running on a real device below:
+Example of the program running on a real device below:
 
 ![jtagGUI Screenshot](img/screenshot.png)
 
@@ -19,9 +19,9 @@ This is just a demo for now. I will continue to add new features, so that I have
 
 This software was developed under Python 3.9. And uses the mentioned above packages (wxPython, TatSu and UrJTAG Python bindings). For now it works just by running `main.py`.
 
-For development I use a UrJTAG mock class, so I don't have to connect real device for feature testing. For now on whenever I want to switch I have to uncomment `# include urjtag` in the `main.py` and comment `import urjtag_mock as urjtag`. This needs a cleaner version.
+By default GUI needs UrJTAG, but passing `DEBUG` as command argument runs a UrJTAG mock class for debuging.
 
-I used it together with a STM32 USBBlaster clone (e.g. [DirtyJTAG](https://github.com/jeanthom/DirtyJTAG)) for interfacing with JTAG, but any of the probes supported by UrJTAG should work. the dropdown list allows to select a probe as listen in the `help cable` listing in UrJTAG.
+I used it together with a STM32 USBBlaster clone (e.g. [DirtyJTAG](https://github.com/jeanthom/DirtyJTAG)) for interfacing with JTAG, but any of the probes supported by UrJTAG should work. The dropdown list allows to select a probe as listed in the `help cable` listing in UrJTAG.
 
 Device discovery is based on BSDL files that are parsed and saved in local SQLite DB. They can be added and removed to the repository accessible in the `Tools` menu.
 
