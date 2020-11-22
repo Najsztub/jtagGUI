@@ -223,12 +223,29 @@ class DUT:
       cell_id = int(cell["cell_number"])
       cell_spec = cell['cell_info']["cell_spec"]
       # Collapse port name
-      cell_spec['port_id'] = ''.join(cell_spec['port_id'])
+      if type(cell_spec['port_id']) is list: 
+        port_name = ''.join(cell_spec['port_id'])
+        cell_spec['port_id'] = port_name
       cell_spec['cell_id'] = cell_id
       if "input_or_disable_spec" in cell['cell_info']: cell_spec['ctrl'] = cell['cell_info']["input_or_disable_spec"]
       self.bsr_cells[cell_id] = cell_spec
 
-    self.bsr_in_cells = [c for c in self.bsr_cells if c['function'].upper() in ['INPUT', 'CLOCK', 'BIDIR', 'OUTPUT2', 'OUTPUT3']]
+    # Decide which cells to use as input cell
+    # INPUT type has precedence over other types
+    self.bsr_in_cells = []
+    cells_funs = {}
+    cid = 0
+    for c in self.bsr_cells:
+      if c['function'].upper() not in ['INPUT', 'CLOCK', 'BIDIR', 'OUTPUT2', 'OUTPUT3']: continue
+      if c['port_id'] in cells_funs:
+        if cells_funs[c['port_id']] == 'INPUT': continue
+        elif c['function'].upper() == 'INPUT':
+          # Replace cell with INPUT
+          self.bsr_in_cells[cells_funs[c['port_id']]['cell_id']] = c
+      else:
+        cells_funs[c['port_id']] = {'cell_id' : cid}
+        self.bsr_in_cells.append(c)
+        cid += 1
 
   def parseBSR(self, bsr):
     bsr_len = len(self.bsr_cells)

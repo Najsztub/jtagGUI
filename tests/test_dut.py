@@ -6,8 +6,8 @@ import sys
 import random
 import pprint
 
-import bsdl_parser
-from dut import DUT
+from HWLayer import bsdl_parser
+from HWLayer.dut import DUT
 
 # Allow to print DEBUG messages
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -52,7 +52,7 @@ class DUTTestCase(unittest.TestCase):
         s = random.randint(0, 2**bsr_len - 1)
         bsr = "{0:b}".format(s).zfill(bsr_len)
         # Set IOF15 to 1
-        index = 48
+        index = len(bsr) - 48 - 1
         bsr = bsr[:index] + '1' + bsr[index + 1:]
         self.dev.parseBSR(bsr)
         pin_st = self.dev.pins[self.dev.port_map['IOF15'][0]]['read']

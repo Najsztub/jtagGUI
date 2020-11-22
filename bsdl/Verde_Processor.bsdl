@@ -1,0 +1,730 @@
+-- Copyright Intel Corporation 2001
+--**************************************************************************** 
+-- Intel Corporation makes no warranty for the use of its products
+-- and assumes no responsibility for any errors which may appear in
+-- this document nor does it make a commitment to update the information 
+-- contained herein.
+--**************************************************************************** 
+-- Boundary-Scan Description Language (BSDL Version 0.0) is a de-facto
+-- standard means of describing essential features of ANSI/IEEE 1149.1-1990 
+-- compliant devices.  This language is under consideration by the IEEE for 
+-- formal inclusion within a supplement to the 1149.1-1990 standard.  The
+-- generation of the supplement entails an extensive IEEE review and a formal 
+-- acceptance balloting procedure which may cP2Pnge the resultant form of the 
+-- language.  Be aware tP2Pt this process may extend well into 1993, and at
+-- this time the IEEE does not endorse or hold an opinion on the language. 
+--**************************************************************************** 
+--
+-- 80321 (tm) Processor BSDL Model
+-- Project code Verde
+-- ---------------------------------------------------------
+-- Rev 0.0    26 Apr 2001
+-- Author : Kevin La Ra x4-8073
+--
+-- Rev 0.1      15 May 2001
+-- Updated to match ballmap change.  Bussed the "A" signal and
+-- unbussed the P_INTZ signals.
+--
+-- Rev 0.2      31 May 2001
+-- Changed polarity of control disable values.  Changed NC[3:0]
+-- to inout.
+--
+-- Rev 0.3    11 Jun 2001
+-- DQ[0] was listed twice in the BS chain.
+--
+-- Rev 0.4    17 Jul 2001
+-- Changed NC[3] to PORZ.  Updated control bits in DDR section.
+--
+-- Rev 0.5    15 Aug 2001
+-- Removed PORZ from the BS chain.
+--
+-- Rev 0.6    29 Jan 2002
+-- Added ball J6 which was missing.
+--
+-- Rev 1.0    05 Apr 2002
+-- Changed Revision ID for B-0 stepping.  Changed NC2 pin to P_BMI pin.
+--
+-- Rev 1.1    31 May 2002
+-- Changed Revision ID for B-1 stepping.
+--
+
+entity Verde_Processor is
+   generic(PHYSICAL_PIN_MAP : string:= "BGA");
+   port ( A              : out     bit_vector(2 to 3);
+          AD             : inout   bit_vector(0 to 31);
+          ADSZ           : out     bit;
+          ALE            : out     bit;
+          BA             : out     bit_vector(0 to 1);
+          BEZ            : out     bit_vector(0 to 3);
+          BLASTZ         : out     bit;
+          CASZ           : out     bit;
+          CB             : inout   bit_vector(0 to 7);
+          CKE            : out     bit_vector(0 to 1);
+          CSZ            : out     bit_vector(0 to 1);
+          DENZ           : out     bit;
+          DM             : out     bit_vector(0 to 8);
+          DQ             : inout   bit_vector(0 to 63);
+          DQS            : inout   bit_vector(0 to 8);
+          FWEZ           : out     bit;
+          GPIO           : inout   bit_vector(0 to 7);
+          HOLD           : in      bit;
+          HOLDA          : out     bit;
+          HPIZ           : in      bit;
+          M_CK           : out     bit_vector(0 to 2);
+          M_CKZ          : out     bit_vector(0 to 2);
+          M_RSTZ         : out     bit;
+          MA             : out     bit_vector(0 to 12);
+          NC             : inout   bit_vector(0 to 1);
+          P_ACK64Z       : inout   bit;
+          P_AD           : inout   bit_vector(0 to 63);
+          P_BMI          : out     bit;
+          P_CBEZ         : inout   bit_vector(0 to 7);
+          P_CLK          : in      bit;
+          P_DEVSELZ      : inout   bit;
+          P_FRAMEZ       : inout   bit;
+          P_GNTZ         : in      bit;
+          P_IDSEL        : in      bit;
+          P_INTAZ        : out     bit;
+          P_INTBZ        : out     bit;
+          P_INTCZ        : out     bit;
+          P_INTDZ        : out     bit;
+          P_IRDYZ        : inout   bit;
+          P_M66EN        : in      bit;
+          P_PAR          : inout   bit;
+          P_PAR64        : inout   bit;
+          P_PERRZ        : inout   bit;
+          P_REQZ         : out     bit;
+          P_REQ64Z       : inout   bit;
+          P_RSTZ         : in      bit;
+          P_SERRZ        : inout   bit;
+          P_STOPZ        : inout   bit;
+          P_TRDYZ        : inout   bit;
+          PB_CLK         : out     bit;
+          PB_RSTZ        : out     bit;
+          PCEZ           : inout   bit_vector(0 to 5);
+          PORZ         : linkage bit;
+          PWRDELAY       : in      bit;
+          RASZ           : out     bit;
+          RCOMP          : linkage bit;
+          RCVENIZ        : in      bit;
+          RCVENOZ        : out     bit;
+          RDYRCVZ        : inout   bit;
+          RXD            : in      bit;
+          SFRM           : out     bit;
+          SSCKI          : in      bit;
+          SSCKO          : out     bit;
+          TCK            : in      bit;
+          TDI            : in      bit;
+          TDO            : out     bit;
+          TMS            : in      bit;
+          TRSTZ          : in      bit;
+          TXD            : out     bit;
+          VCC13          : linkage bit_vector(0 to 33);
+          VCC25          : linkage bit_vector(0 to 37);
+          VCC33          : linkage bit_vector(0 to 50);
+          VCCPLL1        : linkage bit;
+          VCCPLL2        : linkage bit;
+          VREF           : linkage bit;
+          VSS            : linkage bit_vector(0 to 118);
+          WIDTH          : out     bit_vector(0 to 1);
+          WEZ            : out     bit;
+          WRZ            : out     bit;
+          XINTZ          : in      bit_vector(0 to 3)
+   );
+
+   use STD_1149_1_1990.all;
+   use verde_a.all;
+
+   attribute PIN_MAP of Verde_Processor : entity is PHYSICAL_PIN_MAP;
+        
+    constant BGA:PIN_MAP_STRING :=
+
+         "A         : (N23, M22),"&
+         "AD        : (N24, N26, N25, M26, M23, L24, L26, L25,"&
+         "             K23, K26, K24, J23, J26, J25, H23, H26,"&
+         "             H24, G24, G26, G25, F26, F23, E24, E26,"&
+         "             E25, D23, D26, D24, C26, C25, B26, A26),"&
+         "ADSZ      : P24,"&
+         "ALE       : P26,"&
+         "BA        : (D2, D3),"&
+         "BEZ       : (L23, G23, F22, E23),"&
+         "BLASTZ    : R25,"&
+         "CASZ      : H3,"&
+         "CB        : (A9, C8, D8, A7, E9, D9, E7, C7),"&
+         "CKE       : (A18, B18),"&
+         "CSZ       : (L5, L4),"&
+         "DENZ      : R26,"&
+         "DM        : (C22, C19, D15, A12, C4, F1, K3, N4, A8),"&
+         "DQ        : (A25, C23, B22, E21, B24, A24, A22, D22,"&
+         "             A21, D20, E19, D18, C20, B20, A19, D19,"&
+         "             D16, C16, A15, D14, A17, B16, E15, C14,"&
+         "             C13, D12, D11, C11, A13, B12, A11, D10,"&
+         "             D6, A5, A4, A2, C5, D5, A3, B2,"&
+         "             E4, F4, G5, G4, E3, E1, G1, G3,"&
+         "             H2, H1, K1, L3, J5, J4, K2, K4,"&
+         "             M4, M1, N3, P1, L1, M2, N1, P4),"&
+         "DQS       : (A23, A20, A16, E11, B4, F2, J1, N5, B8),"&
+         "FWEZ      : P22,"&
+         "GPIO      : (Y26, Y24, Y23, Y22, W26, W25, W24, W23),"&
+         "HOLD      : T24,"&
+         "HOLDA     : T23,"&
+         "HPIZ      : AB23,"&
+         "M_CK      : (R5, R1, P3),"&
+         "M_CKZ     : (R4, T1, P2),"&
+         "M_RSTZ    : D21,"&
+         "MA        : (B1, A1, A10, B10, C10, E13, D13, B14, A14, C17,C1, D17, E17),"&
+         "NC        : (V23, AD23),"&
+         "P_ACK64Z  : AE11,"&
+         "P_AD      : (AC9, AF10, AC8, AD10, AB8, AF9, AD7, AE9,"&
+         "             AF8, AB6, AF7, AD5, AF6, AC5, AE5, AD4,"&
+         "             AB4, AC1, AB3, AB1, AA5, AB2, AA4, AA1,"&
+         "             Y3, Y1, W5, W3, W4, W1, V4, V1,"&
+         "             AB20, AF20, AC20, AD20, AC19, AF19, AD19, AE19,"&
+         "             AB18, AF18, AC18, AF17, AC17, AE17, AD17, AF16,"&
+         "             AB16, AD16, AC16, AF15, AC15, AE15, AB14, AF14,"&
+         "             AC14, AD14, AC13, AF13, AD13, AE13, AB12, AF12),"&
+         "P_BMI     : AE23,"&
+         "P_CBEZ    : (AC6, AF4, AD1, Y2, AC12, AD11, AF11, AB10),"&
+         "P_CLK        : AC7,"&
+         "P_DEVSELZ : AF1,"&
+         "P_FRAMEZ  : AC3,"&
+         "P_GNTZ    : V2,"&
+         "P_IDSEL   : Y4,"&
+         "P_INTAZ   : T3,"&
+         "P_INTBZ   : T2,"&
+         "P_INTCZ   : U4,"&
+         "P_INTDZ   : U1,"&
+         "P_IRDYZ   : AE1,"&
+         "P_M66EN   : AD8,"&
+         "P_PAR     : AE3,"&
+         "P_PAR64   : AC11,"&
+         "P_PERRZ   : AF2,"&
+         "P_REQZ    : U3,"&
+         "P_REQ64Z  : AC10,"&
+         "P_RSTZ    : U5,"&
+         "P_SERRZ   : AF3,"&
+         "P_STOPZ   : AD2,"&
+         "P_TRDYZ   : AC4,"&
+         "PB_CLK    : T26,"&
+         "PB_RSTZ   : T22,"&
+         "PCEZ      : (V22, V26, U26, U25, U24, U23),"&
+         "PORZ      : AF21,"&
+         "PWRDELAY  : AF23,"&
+         "RASZ      : D1,"&
+         "RCOMP     : T4,"&
+         "RCVENIZ   : D7,"&
+         "RCVENOZ   : B6,"&
+         "RDYRCVZ   : R23,"&
+         "RXD       : AA25,"&
+         "SFRM      : AA23,"&
+         "SSCKI     : AB24,"&
+         "SSCKO     : AB26,"&
+         "TCK       : AD22,"&
+         "TDI       : AE21,"&
+         "TDO       : AC21,"&
+         "TMS       : AF22,"&
+         "TRSTZ     : AC22,"&
+         "TXD       : AA26,"&
+         "VCC13        : (M21, P21, T21, V20, Y18, AA12, AA14, AA16, G7, G8, G9,"&
+         "             G10, G17, G18, G19, G20, H7, H20, J7, J20, K7, K20, U7,"&
+         "             U20, V7, W7, W20, Y7, Y8, Y9, Y10, Y17, Y19, Y20),"&
+         "VCC25     : (C3, C6, C9, C12, C15, C18, C21, C24, E5, F3, F6, F7, F8,"&
+         "             F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20,"&
+         "             F21, G6, H6, J3, J6, K6, L6, M3, M6, N6, P6, R3, R6),"&
+
+         "VCC33     : (T6, U6, V3, V6, W6, Y6, AA3, AA6, AA7, AA8, AA9, AA10, AA11,"&
+         "             AA13, AA15, AA17, AA18, AA19, AA20, AD3, AD6, AD9, AD12,"&
+         "             AD15, AD18, AD21, F24, G21, H21, J21, J24, K21, L21, M24,"&
+         "             N21, R21, R24, U21, V21, V24, W21, Y21, AA21, AA24, AB22, AD24,"&
+         "             AE25, AE26, AF24, AF25, AF26),"&
+         "VCCPLL1   : AF5,"&
+         "VCCPLL2   : AE7,"&
+         "VREF      : A6,"&
+         "VSS       : (B3, B5, B7, B9, B11, B13, B15, B17, B19, B21, B23, B25,"&
+         "             C2, D4, D25, E2, E6, E8, E10, E12, E14, E16, E18, E20, E22,"&
+         "             F5, F25, G2, G22, H5, H25, J2, J22, K5, K25, L2, L11, L12,"&
+         "             L13, L14, L15, L16, L22, M5, M11, M12, M13, M14, M15, M16,"&
+         "             M25, N2, N11, N12, N13, N14, N15, N16, N22, P5, P11, P12,"&
+         "             P13, P14, P15, P16, P25, R2, R11, R12, R13, R14, R15, R16,"&
+         "             R22, T5, T11, T12, T13, T14, T15, T16, T25, U2, U22, V5,"&
+         "             V25, W2, W22, Y5, Y25, AA2, AA22, AB5, AB7, AB9, AB11, AB13,"&
+         "             AB15, AB17, AB19, AB21, AB25, AC2, AC23, AD25, AE2, AE4,"&
+         "             AE6, AE8, AE10, AE12, AE14, AE16, AE18, AE20, AE22, AE24),"&
+         "WIDTH     : (K22, H22),"&
+         "WEZ       : H4,"&
+         "WRZ       : P23,"&
+         "XINTZ     : (AD26, AC26, AC25, AC24)";
+
+   attribute Tap_Scan_In    of  TDI   : signal is true;
+   attribute Tap_Scan_Mode  of  TMS   : signal is true;
+   attribute Tap_Scan_Out   of  TDO   : signal is true;
+   attribute Tap_Scan_Reset of  TRSTZ : signal is true;
+   attribute Tap_Scan_Clock of  TCK   : signal is (16.0e6, BOTH);
+
+   attribute Instruction_Length of Verde_Processor: entity is 5;
+
+   attribute Instruction_Opcode of Verde_Processor: entity is
+
+      "BYPASS    (11111)," &
+      "EXTEST    (00000)," &
+      "SAMPLE    (00001)," &
+      "IDCODE    (11110)," &
+      "CLAMP    (00100)," &
+      "HIGHZ    (01000)," &
+      "DBGRX    (00010)," &
+      "DCSR     (01001)," &
+      "DBGTX    (10000)," &
+      "Reserved    (01011, 00011, 00101, 01111, 00110, 10001, 10011, 10100, 10101, 10110, 10111, 00111, 01010, 01100, 01101, 11000, 11001, 10010, 11010, 11011, 11100, 11101, 01110)";
+
+   attribute Instruction_Capture of Verde_Processor: entity is "00001";
+
+   attribute Instruction_Private of Verde_Processor: entity is "Reserved" ;
+
+   attribute Idcode_Register of Verde_Processor: entity is
+      "0010"                  &  --version,
+      "1001001001100110"      &  --part number
+      "00000001001"           &  --manufacturers identity
+      "1";                       --required by the standard
+
+   attribute Register_Access of Verde_Processor: entity is
+    "Bypass        (CLAMP, HIGHZ)," &
+        "Dbg[36]        (DBGRX, DBGTX, DCSR)";
+
+--{*******************************************************************}
+--{  The first cell, cell 0, is closest to TDO                        }
+--{  BC_1:Control, Output3  BC_4: Input, Clock                        }
+--{  CBSC_1: Bidirectional                                            }
+--{*******************************************************************}
+
+   attribute Boundary_Cells of Verde_Processor: entity is "BC_4, BC_1, CBSC_1";
+   attribute Boundary_Length of Verde_Processor: entity is 356;
+   attribute Boundary_Register of Verde_Processor: entity is
+
+--   #      cell         name          function    safe  control  disable  disable
+--          type                                   bit   signal    value   result
+-- GP enable
+-- P_BMI (PCI Bus Master Indicator)
+     "0     (BC_1,        *,           control,     1                          )," &
+-- NC[1:0] (no connects)
+     "1     (BC_1,        *,           control,     1                          )," &
+     "2     (BC_1,        *,           control,     1                          )," &
+-- SSCKO (serial port clock out)
+     "3     (BC_1,        *,           control,     1                          )," &
+-- SFRM (serial frame)
+     "4     (BC_1,        *,           control,     1                          )," &
+-- TXD (xmit data)
+     "5     (BC_1,        *,           control,     1                          )," &
+-- GPIO[7:0] (GP I/O)
+     "6     (BC_1,        *,           control,     1                          )," &
+     "7     (BC_1,        *,           control,     1                          )," &
+     "8     (BC_1,        *,           control,     1                          )," &
+     "9     (BC_1,        *,           control,     1                          )," &
+     "10    (BC_1,        *,           control,     1                          )," &
+     "11    (BC_1,        *,           control,     1                          )," &
+     "12    (BC_1,        *,           control,     1                          )," &
+     "13    (BC_1,        *,           control,     1                          )," &
+-- GP data
+     "14    (BC_1,        P_BMI,       output3,     X,     0,        1,       Z)," &
+     "15    (CBSC_1,      NC(1),       bidir,       X,     1,        1,       Z)," &
+     "16    (CBSC_1,      NC(0),       bidir,       X,     2,        1,       Z)," &
+     "17    (BC_4,        HPIZ,        input,       X                          )," &
+     "18    (BC_4,        PWRDELAY,    input,       X                          )," &
+     "19    (BC_1,        TXD,         output3,     X,     5,        1,       Z)," &
+     "20    (BC_1,        SFRM,        output3,     X,     4,        1,       Z)," &
+     "21    (BC_1,        SSCKO,       output3,     X,     3,        1,       Z)," &
+     "22    (BC_4,        RXD,         input,       X                          )," &
+     "23    (BC_4,        SSCKI,       input,       X                          )," &
+     "24    (CBSC_1,      GPIO(7),     bidir,       X,     6,        1,       Z)," &
+     "25    (CBSC_1,      GPIO(6),     bidir,       X,     7,        1,       Z)," &
+     "26    (CBSC_1,      GPIO(5),     bidir,       X,     8,        1,       Z)," &
+     "27    (CBSC_1,      GPIO(4),     bidir,       X,     9,        1,       Z)," &
+     "28    (CBSC_1,      GPIO(3),     bidir,       X,     10,       1,       Z)," &
+     "29    (CBSC_1,      GPIO(2),     bidir,       X,     11,       1,       Z)," &
+     "30    (CBSC_1,      GPIO(1),     bidir,       X,     12,       1,       Z)," &
+     "31    (CBSC_1,      GPIO(0),     bidir,       X,     13,       1,       Z)," &
+     "32    (BC_4,        XINTZ(3),    input,       X                          )," &
+     "33    (BC_4,        XINTZ(2),    input,       X                          )," &
+     "34    (BC_4,        XINTZ(1),    input,       X                          )," &
+     "35    (BC_4,        XINTZ(0),    input,       X                          )," &
+
+-- PBI enable
+-- PB_RSTZ (PB reset)
+     "36    (BC_1,        *,           control,     1                          )," &
+-- HOLDA (hold ack)
+     "37    (BC_1,        *,           control,     1                          )," &
+-- PB_CLK (PB clock)
+     "38    (BC_1,        *,           control,     1                          )," &
+-- PCEZ (peripheral chip enable)
+     "39    (BC_1,        *,           control,     1                          )," &
+-- AD[7:0] 
+     "40    (BC_1,        *,           control,     1                          )," &
+-- AD[15:8]
+     "41    (BC_1,        *,           control,     1                          )," &
+-- AD[23:16] 
+     "42    (BC_1,        *,           control,     1                          )," &
+-- AD[31:24]
+     "43    (BC_1,        *,           control,     1                          )," &
+-- ALE (addr latch enable)
+     "44    (BC_1,        *,           control,     1                          )," &
+-- ADSZ (addr strobe)
+     "45    (BC_1,        *,           control,     1                          )," &
+-- WRZ (write/read)
+     "46    (BC_1,        *,           control,     1                          )," &
+-- FWEZ (flash write enable)
+     "47    (BC_1,        *,           control,     1                          )," &
+-- DENZ (data enable)
+     "48    (BC_1,        *,           control,     1                          )," &
+-- BLASTZ (burst last)
+     "49    (BC_1,        *,           control,     1                          )," &
+-- RDYRCRZ (ready/recover)
+     "50    (BC_1,        *,           control,     1                          )," &
+-- A32 (address 3:2)
+     "51    (BC_1,        *,           control,     1                          )," &
+-- WIDTH0 (width)
+     "52    (BC_1,        *,           control,     1                          )," &
+-- BE (byte enables)
+     "53    (BC_1,        *,           control,     1                          )," &
+-- PBI data
+     "54    (BC_4,        HOLD,        input,       X                          )," &
+     "55    (BC_1,        ALE,         output3,     X,     44,       1,       Z)," &
+     "56    (BC_1,        ADSZ,        output3,     X,     45,       1,       Z)," &
+     "57    (BC_1,        WRZ,         output3,     X,     46,       1,       Z)," &
+     "58    (BC_1,        FWEZ,        output3,     X,     47,       1,       Z)," &
+     "59    (BC_1,        DENZ,        output3,     X,     48,       1,       Z)," &
+     "60    (BC_1,        BLASTZ,      output3,     X,     49,       1,       Z)," &
+     "61    (CBSC_1,      RDYRCVZ,     bidir,       X,     50,       1,       Z)," &
+     "62    (BC_1,        PB_RSTZ,     output3,     X,     36,       1,       Z)," &
+     "63    (BC_1,        HOLDA,       output3,     X,     37,       1,       Z)," &
+     "64    (CBSC_1,      AD(31),      bidir,       X,     43,       1,       Z)," &
+     "65    (CBSC_1,      AD(30),      bidir,       X,     43,       1,       Z)," &
+     "66    (CBSC_1,      AD(29),      bidir,       X,     43,       1,       Z)," &
+     "67    (CBSC_1,      AD(28),      bidir,       X,     43,       1,       Z)," &
+     "68    (CBSC_1,      AD(27),      bidir,       X,     43,       1,       Z)," &
+     "69    (CBSC_1,      AD(26),      bidir,       X,     43,       1,       Z)," &
+     "70    (CBSC_1,      AD(25),      bidir,       X,     43,       1,       Z)," &
+     "71    (CBSC_1,      AD(24),      bidir,       X,     43,       1,       Z)," &
+     "72    (CBSC_1,      AD(23),      bidir,       X,     42,       1,       Z)," &
+     "73    (CBSC_1,      AD(22),      bidir,       X,     42,       1,       Z)," &
+     "74    (CBSC_1,      AD(21),      bidir,       X,     42,       1,       Z)," &
+     "75    (CBSC_1,      AD(20),      bidir,       X,     42,       1,       Z)," &
+     "76    (CBSC_1,      AD(19),      bidir,       X,     42,       1,       Z)," &
+     "77    (CBSC_1,      AD(18),      bidir,       X,     42,       1,       Z)," &
+     "78    (CBSC_1,      AD(17),      bidir,       X,     42,       1,       Z)," &
+     "79    (CBSC_1,      AD(16),      bidir,       X,     42,       1,       Z)," &
+     "80    (CBSC_1,      AD(15),      bidir,       X,     41,       1,       Z)," &
+     "81    (CBSC_1,      AD(14),      bidir,       X,     41,       1,       Z)," &
+     "82    (CBSC_1,      AD(13),      bidir,       X,     41,       1,       Z)," &
+     "83    (CBSC_1,      AD(12),      bidir,       X,     41,       1,       Z)," &
+     "84    (CBSC_1,      AD(11),      bidir,       X,     41,       1,       Z)," &
+     "85    (CBSC_1,      AD(10),      bidir,       X,     41,       1,       Z)," &
+     "86    (CBSC_1,      AD(9),       bidir,       X,     41,       1,       Z)," &
+     "87    (CBSC_1,      AD(8),       bidir,       X,     41,       1,       Z)," &
+     "88    (CBSC_1,      AD(7),       bidir,       X,     40,       1,       Z)," &
+     "89    (CBSC_1,      AD(6),       bidir,       X,     40,       1,       Z)," &
+     "90    (CBSC_1,      AD(5),       bidir,       X,     40,       1,       Z)," &
+     "91    (CBSC_1,      AD(4),       bidir,       X,     40,       1,       Z)," &
+     "92    (CBSC_1,      AD(3),       bidir,       X,     40,       1,       Z)," &
+     "93    (CBSC_1,      AD(2),       bidir,       X,     40,       1,       Z)," &
+     "94    (CBSC_1,      AD(1),       bidir,       X,     40,       1,       Z)," &
+     "95    (CBSC_1,      AD(0),       bidir,       X,     40,       1,       Z)," &
+     "96    (BC_1,        PB_CLK,      output3,     X,     38,       1,       Z)," &
+     "97    (BC_1,        A(3),        output3,     X,     51,       1,       Z)," &
+     "98    (BC_1,        A(2),        output3,     X,     51,       1,       Z)," &
+     "99    (BC_1,        BEZ(3),      output3,     X,     53,       1,       Z)," &
+     "100   (BC_1,        BEZ(2),      output3,     X,     53,       1,       Z)," &
+     "101   (BC_1,        BEZ(1),      output3,     X,     53,       1,       Z)," &
+     "102   (BC_1,        BEZ(0),      output3,     X,     53,       1,       Z)," &
+     "103   (BC_1,        WIDTH(1),    output3,     X,     52,       1,       Z)," &
+     "104   (BC_1,        WIDTH(0),    output3,     X,     52,       1,       Z)," &
+     "105   (CBSC_1,      PCEZ(5),     bidir,       X,     39,       1,       Z)," &
+     "106   (CBSC_1,      PCEZ(4),     bidir,       X,     39,       1,       Z)," &
+     "107   (CBSC_1,      PCEZ(3),     bidir,       X,     39,       1,       Z)," &
+     "108   (CBSC_1,      PCEZ(2),     bidir,       X,     39,       1,       Z)," &
+     "109   (CBSC_1,      PCEZ(1),     bidir,       X,     39,       1,       Z)," &
+     "110   (CBSC_1,      PCEZ(0),     bidir,       X,     39,       1,       Z)," &
+
+-- PCI enable
+-- P_AD[63:32]
+     "111   (BC_1,        *,           control,     1                          )," &
+-- P_AD[31:0]
+     "112   (BC_1,        *,           control,     1                          )," &
+-- P_CBEZ[7:4]
+     "113   (BC_1,        *,           control,     1                          )," &
+-- P_CBEZ[3:0]
+     "114   (BC_1,        *,           control,     1                          )," &
+-- P_ACK64Z
+     "115   (BC_1,        *,           control,     1                          )," &
+-- P_PAR64
+     "116   (BC_1,        *,           control,     1                          )," &
+-- P_REQ64Z
+     "117   (BC_1,        *,           control,     1                          )," &
+-- P_SERRZ
+     "118   (BC_1,        *,           control,     1                          )," &
+-- P_PERRZ
+     "119   (BC_1,        *,           control,     1                          )," &
+-- P_PAR
+     "120   (BC_1,        *,           control,     1                          )," &
+-- P_STOPZ
+     "121   (BC_1,        *,           control,     1                          )," &
+-- P_DEVSELZ
+     "122   (BC_1,        *,           control,     1                          )," &
+-- P_TRDYZ
+     "123   (BC_1,        *,           control,     1                          )," &
+-- P_FRAMEZ
+     "124   (BC_1,        *,           control,     1                          )," &
+-- P_IRDYZ
+     "125   (BC_1,        *,           control,     1                          )," &
+-- P_REQZ
+     "126   (BC_1,        *,           control,     1                          )," &
+-- P_INTAZ
+     "127   (BC_1,        *,           control,     1                          )," &
+-- P_INTBZ
+     "128   (BC_1,        *,           control,     1                          )," &
+-- P_INTCZ
+     "129   (BC_1,        *,           control,     1                          )," &
+-- P_INTDZ
+     "130   (BC_1,        *,           control,     1                          )," &
+
+-- PCI data
+     "131   (CBSC_1,      P_ACK64Z,    bidir,       X,     115,      1,       Z)," &
+     "132   (CBSC_1,      P_REQ64Z,    bidir,       X,     117,      1,       Z)," &
+     "133   (CBSC_1,      P_PAR64,     bidir,       X,     116,      1,       Z)," &
+     "134   (BC_4,        P_M66EN,     input,       X                          )," &
+     "135   (CBSC_1,      P_SERRZ,     bidir,       X,     118,      1,       Z)," &
+     "136   (CBSC_1,      P_PERRZ,     bidir,       X,     119,      1,       Z)," &
+     "137   (CBSC_1,      P_PAR,       bidir,       X,     120,      1,       Z)," &
+     "138   (CBSC_1,      P_STOPZ,     bidir,       X,     121,      1,       Z)," &
+     "139   (CBSC_1,      P_DEVSELZ,   bidir,       X,     122,      1,       Z)," &
+     "140   (CBSC_1,      P_TRDYZ,     bidir,       X,     123,      1,       Z)," &
+     "141   (CBSC_1,      P_FRAMEZ,    bidir,       X,     124,      1,       Z)," &
+     "142   (CBSC_1,      P_IRDYZ,     bidir,       X,     125,      1,       Z)," &
+     "143   (CBSC_1,      P_CBEZ(7),   bidir,       X,     113,      1,       Z)," &
+     "144   (CBSC_1,      P_CBEZ(6),   bidir,       X,     113,      1,       Z)," &
+     "145   (CBSC_1,      P_CBEZ(5),   bidir,       X,     113,      1,       Z)," &
+     "146   (CBSC_1,      P_CBEZ(4),   bidir,       X,     113,      1,       Z)," &
+     "147   (CBSC_1,      P_CBEZ(3),   bidir,       X,     114,      1,       Z)," &
+     "148   (CBSC_1,      P_CBEZ(2),   bidir,       X,     114,      1,       Z)," &
+     "149   (CBSC_1,      P_CBEZ(1),   bidir,       X,     114,      1,       Z)," &
+     "150   (CBSC_1,      P_CBEZ(0),   bidir,       X,     114,      1,       Z)," &
+     "151   (BC_1,        P_REQZ,      output3,     X,     126,      1,       Z)," &
+     "152   (BC_4,        P_GNTZ,      input,       X                          )," &
+     "153   (BC_4,        P_RSTZ,      input,       X                          )," &
+     "154   (BC_4,        P_IDSEL,     input,       X                          )," &
+     "155   (CBSC_1,      P_AD(63),    bidir,       X,     111,      1,       Z)," &
+     "156   (CBSC_1,      P_AD(62),    bidir,       X,     111,      1,       Z)," &
+     "157   (CBSC_1,      P_AD(61),    bidir,       X,     111,      1,       Z)," &
+     "158   (CBSC_1,      P_AD(60),    bidir,       X,     111,      1,       Z)," &
+     "159   (CBSC_1,      P_AD(59),    bidir,       X,     111,      1,       Z)," &
+     "160   (CBSC_1,      P_AD(58),    bidir,       X,     111,      1,       Z)," &
+     "161   (CBSC_1,      P_AD(57),    bidir,       X,     111,      1,       Z)," &
+     "162   (CBSC_1,      P_AD(56),    bidir,       X,     111,      1,       Z)," &
+     "163   (CBSC_1,      P_AD(55),    bidir,       X,     111,      1,       Z)," &
+     "164   (CBSC_1,      P_AD(54),    bidir,       X,     111,      1,       Z)," &
+     "165   (CBSC_1,      P_AD(53),    bidir,       X,     111,      1,       Z)," &
+     "166   (CBSC_1,      P_AD(52),    bidir,       X,     111,      1,       Z)," &
+     "167   (CBSC_1,      P_AD(51),    bidir,       X,     111,      1,       Z)," &
+     "168   (CBSC_1,      P_AD(50),    bidir,       X,     111,      1,       Z)," &
+     "169   (CBSC_1,      P_AD(49),    bidir,       X,     111,      1,       Z)," &
+     "170   (CBSC_1,      P_AD(48),    bidir,       X,     111,      1,       Z)," &
+     "171   (CBSC_1,      P_AD(47),    bidir,       X,     111,      1,       Z)," &
+     "172   (CBSC_1,      P_AD(46),    bidir,       X,     111,      1,       Z)," &
+     "173   (CBSC_1,      P_AD(45),    bidir,       X,     111,      1,       Z)," &
+     "174   (CBSC_1,      P_AD(44),    bidir,       X,     111,      1,       Z)," &
+     "175   (CBSC_1,      P_AD(43),    bidir,       X,     111,      1,       Z)," &
+     "176   (CBSC_1,      P_AD(42),    bidir,       X,     111,      1,       Z)," &
+     "177   (CBSC_1,      P_AD(41),    bidir,       X,     111,      1,       Z)," &
+     "178   (CBSC_1,      P_AD(40),    bidir,       X,     111,      1,       Z)," &
+     "179   (CBSC_1,      P_AD(39),    bidir,       X,     111,      1,       Z)," &
+     "180   (CBSC_1,      P_AD(38),    bidir,       X,     111,      1,       Z)," &
+     "181   (CBSC_1,      P_AD(37),    bidir,       X,     111,      1,       Z)," &
+     "182   (CBSC_1,      P_AD(36),    bidir,       X,     111,      1,       Z)," &
+     "183   (CBSC_1,      P_AD(35),    bidir,       X,     111,      1,       Z)," &
+     "184   (CBSC_1,      P_AD(34),    bidir,       X,     111,      1,       Z)," &
+     "185   (CBSC_1,      P_AD(33),    bidir,       X,     111,      1,       Z)," &
+     "186   (CBSC_1,      P_AD(32),    bidir,       X,     111,      1,       Z)," &
+     "187   (CBSC_1,      P_AD(31),    bidir,       X,     112,      1,       Z)," &
+     "188   (CBSC_1,      P_AD(30),    bidir,       X,     112,      1,       Z)," &
+     "189   (CBSC_1,      P_AD(29),    bidir,       X,     112,      1,       Z)," &
+     "190   (CBSC_1,      P_AD(28),    bidir,       X,     112,      1,       Z)," &
+     "191   (CBSC_1,      P_AD(27),    bidir,       X,     112,      1,       Z)," &
+     "192   (CBSC_1,      P_AD(26),    bidir,       X,     112,      1,       Z)," &
+     "193   (CBSC_1,      P_AD(25),    bidir,       X,     112,      1,       Z)," &
+     "194   (CBSC_1,      P_AD(24),    bidir,       X,     112,      1,       Z)," &
+     "195   (CBSC_1,      P_AD(23),    bidir,       X,     112,      1,       Z)," &
+     "196   (CBSC_1,      P_AD(22),    bidir,       X,     112,      1,       Z)," &
+     "197   (CBSC_1,      P_AD(21),    bidir,       X,     112,      1,       Z)," &
+     "198   (CBSC_1,      P_AD(20),    bidir,       X,     112,      1,       Z)," &
+     "199   (CBSC_1,      P_AD(19),    bidir,       X,     112,      1,       Z)," &
+     "200   (CBSC_1,      P_AD(18),    bidir,       X,     112,      1,       Z)," &
+     "201   (CBSC_1,      P_AD(17),    bidir,       X,     112,      1,       Z)," &
+     "202   (CBSC_1,      P_AD(16),    bidir,       X,     112,      1,       Z)," &
+     "203   (CBSC_1,      P_AD(15),    bidir,       X,     112,      1,       Z)," &
+     "204   (CBSC_1,      P_AD(14),    bidir,       X,     112,      1,       Z)," &
+     "205   (CBSC_1,      P_AD(13),    bidir,       X,     112,      1,       Z)," &
+     "206   (CBSC_1,      P_AD(12),    bidir,       X,     112,      1,       Z)," &
+     "207   (CBSC_1,      P_AD(11),    bidir,       X,     112,      1,       Z)," &
+     "208   (CBSC_1,      P_AD(10),    bidir,       X,     112,      1,       Z)," &
+     "209   (CBSC_1,      P_AD(9),     bidir,       X,     112,      1,       Z)," &
+     "210   (CBSC_1,      P_AD(8),     bidir,       X,     112,      1,       Z)," &
+     "211   (CBSC_1,      P_AD(7),     bidir,       X,     112,      1,       Z)," &
+     "212   (CBSC_1,      P_AD(6),     bidir,       X,     112,      1,       Z)," &
+     "213   (CBSC_1,      P_AD(5),     bidir,       X,     112,      1,       Z)," &
+     "214   (CBSC_1,      P_AD(4),     bidir,       X,     112,      1,       Z)," &
+     "215   (CBSC_1,      P_AD(3),     bidir,       X,     112,      1,       Z)," &
+     "216   (CBSC_1,      P_AD(2),     bidir,       X,     112,      1,       Z)," &
+     "217   (CBSC_1,      P_AD(1),     bidir,       X,     112,      1,       Z)," &
+     "218   (CBSC_1,      P_AD(0),     bidir,       X,     112,      1,       Z)," &
+     "219   (BC_1,        P_INTDZ,     output3,     X,     130,      1,       Z)," &
+     "220   (BC_1,        P_INTCZ,     output3,     X,     129,      1,       Z)," &
+     "221   (BC_1,        P_INTBZ,     output3,     X,     128,      1,       Z)," &
+     "222   (BC_1,        P_INTAZ,     output3,     X,     127,      1,       Z)," &
+     "223   (BC_4,        P_CLK,       clock,       X                          )," &
+
+-- DDR enable
+-- M_CK0, M_CK0Z (memory clock 0)
+     "224   (BC_1,        *,           control,     1                          )," &
+-- M_CK1, M_CK1Z (memory clock 1)
+     "225   (BC_1,        *,           control,     1                          )," &
+-- M_CK2, M_CK2Z (memory clock 2)
+     "226   (BC_1,        *,           control,     1                          )," &
+-- CKE[1:0], CSZ[1:0], WEZ, RASZ, CASZ, M_RSTZ, RCVENOZ (SDRAM control signals)
+     "227   (BC_1,        *,           control,     1                          )," &
+-- MA[12:0], BA[1:0] (memory address bus)
+     "228   (BC_1,        *,           control,     1                          )," &
+-- DQ[31:0], DM[3:0] (low half of SDRAM data bus)
+     "229   (BC_1,        *,           control,     1                          )," &
+-- DQS[3:0]
+     "230   (BC_1,        *,           control,     1                          )," &
+-- DQS[7:4]
+     "231   (BC_1,        *,           control,     1                          )," &
+-- DQ[63:32], DM[7:4] (high half of SDRAM data bus)
+     "232   (BC_1,        *,           control,     1                          )," &
+-- CB[7:0], DM[8] (ECC for SDRAM bus)
+     "233   (BC_1,        *,           control,     1                          )," &
+-- DQS[8]
+     "234   (BC_1,        *,           control,     1                          )," &
+
+-- DDR data
+     "235   (BC_1,        M_CKZ(2),    output3,     X,     226,      1,       Z)," &
+     "236   (BC_1,        M_CKZ(1),    output3,     X,     225,      1,       Z)," &
+     "237   (BC_1,        M_CKZ(0),    output3,     X,     224,      1,       Z)," &
+     "238   (BC_1,        M_CK(2),     output3,     X,     226,      1,       Z)," &
+     "239   (BC_1,        M_CK(1),     output3,     X,     225,      1,       Z)," &
+     "240   (BC_1,        M_CK(0),     output3,     X,     224,      1,       Z)," &
+     "241   (BC_1,        CSZ(1),      output3,     X,     227,      1,       Z)," &
+     "242   (BC_1,        CSZ(0),      output3,     X,     227,      1,       Z)," &
+     "243   (BC_1,        CASZ,        output3,     X,     227,      1,       Z)," &
+     "244   (BC_1,        WEZ,         output3,     X,     227,      1,       Z)," &
+     "245   (BC_1,        RASZ,        output3,     X,     227,      1,       Z)," &
+     "246   (BC_1,        M_RSTZ,      output3,     X,     227,      1,       Z)," &
+     "247   (BC_1,        BA(1),       output3,     X,     228,      1,       Z)," &
+     "248   (BC_1,        BA(0),       output3,     X,     228,      1,       Z)," &
+     "249   (CBSC_1,      CB(7),       bidir,       X,     233,      1,       Z)," &
+     "250   (CBSC_1,      CB(6),       bidir,       X,     233,      1,       Z)," &
+     "251   (CBSC_1,      CB(5),       bidir,       X,     233,      1,       Z)," &
+     "252   (CBSC_1,      CB(4),       bidir,       X,     233,      1,       Z)," &
+     "253   (CBSC_1,      CB(3),       bidir,       X,     233,      1,       Z)," &
+     "254   (CBSC_1,      CB(2),       bidir,       X,     233,      1,       Z)," &
+     "255   (CBSC_1,      CB(1),       bidir,       X,     233,      1,       Z)," &
+     "256   (CBSC_1,      CB(0),       bidir,       X,     233,      1,       Z)," &
+     "257   (BC_4,        RCVENIZ,     input,       X                          )," &
+     "258   (BC_1,        RCVENOZ,     output3,     X,     227,      1,       Z)," &
+     "259   (BC_1,        MA(12),      output3,     X,     228,      1,       Z)," &
+     "260   (BC_1,        MA(11),      output3,     X,     228,      1,       Z)," &
+     "261   (BC_1,        MA(10),      output3,     X,     228,      1,       Z)," &
+     "262   (BC_1,        MA(9),       output3,     X,     228,      1,       Z)," &
+     "263   (BC_1,        MA(8),       output3,     X,     228,      1,       Z)," &
+     "264   (BC_1,        MA(7),       output3,     X,     228,      1,       Z)," &
+     "265   (BC_1,        MA(6),       output3,     X,     228,      1,       Z)," &
+     "266   (BC_1,        MA(5),       output3,     X,     228,      1,       Z)," &
+     "267   (BC_1,        MA(4),       output3,     X,     228,      1,       Z)," &
+     "268   (BC_1,        MA(3),       output3,     X,     228,      1,       Z)," &
+     "269   (BC_1,        MA(2),       output3,     X,     228,      1,       Z)," &
+     "270   (BC_1,        MA(1),       output3,     X,     228,      1,       Z)," &
+     "271   (BC_1,        MA(0),       output3,     X,     228,      1,       Z)," &
+     "272   (BC_1,        DM(8),       output3,     X,     233,      1,       Z)," &
+     "273   (BC_1,        DM(7),       output3,     X,     232,      1,       Z)," &
+     "274   (BC_1,        DM(6),       output3,     X,     232,      1,       Z)," &
+     "275   (BC_1,        DM(5),       output3,     X,     232,      1,       Z)," &
+     "276   (BC_1,        DM(4),       output3,     X,     232,      1,       Z)," &
+     "277   (BC_1,        DM(3),       output3,     X,     229,      1,       Z)," &
+     "278   (BC_1,        DM(2),       output3,     X,     229,      1,       Z)," &
+     "279   (BC_1,        DM(1),       output3,     X,     229,      1,       Z)," &
+     "280   (BC_1,        DM(0),       output3,     X,     229,      1,       Z)," &
+     "281   (CBSC_1,      DQS(8),      bidir,       X,     234,      1,       Z)," &
+     "282   (CBSC_1,      DQS(7),      bidir,       X,     231,      1,       Z)," &
+     "283   (CBSC_1,      DQS(6),      bidir,       X,     231,      1,       Z)," &
+     "284   (CBSC_1,      DQS(5),      bidir,       X,     231,      1,       Z)," &
+     "285   (CBSC_1,      DQS(4),      bidir,       X,     231,      1,       Z)," &
+     "286   (CBSC_1,      DQS(3),      bidir,       X,     230,      1,       Z)," &
+     "287   (CBSC_1,      DQS(2),      bidir,       X,     230,      1,       Z)," &
+     "288   (CBSC_1,      DQS(1),      bidir,       X,     230,      1,       Z)," &
+     "289   (CBSC_1,      DQS(0),      bidir,       X,     230,      1,       Z)," &
+     "290   (CBSC_1,      DQ(63),      bidir,       X,     232,      1,       Z)," &
+     "291   (CBSC_1,      DQ(62),      bidir,       X,     232,      1,       Z)," &
+     "292   (CBSC_1,      DQ(61),      bidir,       X,     232,      1,       Z)," &
+     "293   (CBSC_1,      DQ(60),      bidir,       X,     232,      1,       Z)," &
+     "294   (CBSC_1,      DQ(59),      bidir,       X,     232,      1,       Z)," &
+     "295   (CBSC_1,      DQ(58),      bidir,       X,     232,      1,       Z)," &
+     "296   (CBSC_1,      DQ(57),      bidir,       X,     232,      1,       Z)," &
+     "297   (CBSC_1,      DQ(56),      bidir,       X,     232,      1,       Z)," &
+     "298   (CBSC_1,      DQ(55),      bidir,       X,     232,      1,       Z)," &
+     "299   (CBSC_1,      DQ(54),      bidir,       X,     232,      1,       Z)," &
+     "300   (CBSC_1,      DQ(53),      bidir,       X,     232,      1,       Z)," &
+     "301   (CBSC_1,      DQ(52),      bidir,       X,     232,      1,       Z)," &
+     "302   (CBSC_1,      DQ(51),      bidir,       X,     232,      1,       Z)," &
+     "303   (CBSC_1,      DQ(50),      bidir,       X,     232,      1,       Z)," &
+     "304   (CBSC_1,      DQ(49),      bidir,       X,     232,      1,       Z)," &
+     "305   (CBSC_1,      DQ(48),      bidir,       X,     232,      1,       Z)," &
+     "306   (CBSC_1,      DQ(47),      bidir,       X,     232,      1,       Z)," &
+     "307   (CBSC_1,      DQ(46),      bidir,       X,     232,      1,       Z)," &
+     "308   (CBSC_1,      DQ(45),      bidir,       X,     232,      1,       Z)," &
+     "309   (CBSC_1,      DQ(44),      bidir,       X,     232,      1,       Z)," &
+     "310   (CBSC_1,      DQ(43),      bidir,       X,     232,      1,       Z)," &
+     "311   (CBSC_1,      DQ(42),      bidir,       X,     232,      1,       Z)," &
+     "312   (CBSC_1,      DQ(41),      bidir,       X,     232,      1,       Z)," &
+     "313   (CBSC_1,      DQ(40),      bidir,       X,     232,      1,       Z)," &
+     "314   (CBSC_1,      DQ(39),      bidir,       X,     232,      1,       Z)," &
+     "315   (CBSC_1,      DQ(38),      bidir,       X,     232,      1,       Z)," &
+     "316   (CBSC_1,      DQ(37),      bidir,       X,     232,      1,       Z)," &
+     "317   (CBSC_1,      DQ(36),      bidir,       X,     232,      1,       Z)," &
+     "318   (CBSC_1,      DQ(35),      bidir,       X,     232,      1,       Z)," &
+     "319   (CBSC_1,      DQ(34),      bidir,       X,     232,      1,       Z)," &
+     "320   (CBSC_1,      DQ(33),      bidir,       X,     232,      1,       Z)," &
+     "321   (CBSC_1,      DQ(32),      bidir,       X,     232,      1,       Z)," &
+     "322   (CBSC_1,      DQ(31),      bidir,       X,     229,      1,       Z)," &
+     "323   (CBSC_1,      DQ(30),      bidir,       X,     229,      1,       Z)," &
+     "324   (CBSC_1,      DQ(29),      bidir,       X,     229,      1,       Z)," &
+     "325   (CBSC_1,      DQ(28),      bidir,       X,     229,      1,       Z)," &
+     "326   (CBSC_1,      DQ(27),      bidir,       X,     229,      1,       Z)," &
+     "327   (CBSC_1,      DQ(26),      bidir,       X,     229,      1,       Z)," &
+     "328   (CBSC_1,      DQ(25),      bidir,       X,     229,      1,       Z)," &
+     "329   (CBSC_1,      DQ(24),      bidir,       X,     229,      1,       Z)," &
+     "330   (CBSC_1,      DQ(23),      bidir,       X,     229,      1,       Z)," &
+     "331   (CBSC_1,      DQ(22),      bidir,       X,     229,      1,       Z)," &
+     "332   (CBSC_1,      DQ(21),      bidir,       X,     229,      1,       Z)," &
+     "333   (CBSC_1,      DQ(20),      bidir,       X,     229,      1,       Z)," &
+     "334   (CBSC_1,      DQ(19),      bidir,       X,     229,      1,       Z)," &
+     "335   (CBSC_1,      DQ(18),      bidir,       X,     229,      1,       Z)," &
+     "336   (CBSC_1,      DQ(17),      bidir,       X,     229,      1,       Z)," &
+     "337   (CBSC_1,      DQ(16),      bidir,       X,     229,      1,       Z)," &
+     "338   (CBSC_1,      DQ(15),      bidir,       X,     229,      1,       Z)," &
+     "339   (CBSC_1,      DQ(14),      bidir,       X,     229,      1,       Z)," &
+     "340   (CBSC_1,      DQ(13),      bidir,       X,     229,      1,       Z)," &
+     "341   (CBSC_1,      DQ(12),      bidir,       X,     229,      1,       Z)," &
+     "342   (CBSC_1,      DQ(11),      bidir,       X,     229,      1,       Z)," &
+     "343   (CBSC_1,      DQ(10),      bidir,       X,     229,      1,       Z)," &
+     "344   (CBSC_1,      DQ(9),       bidir,       X,     229,      1,       Z)," &
+     "345   (CBSC_1,      DQ(8),       bidir,       X,     229,      1,       Z)," &
+     "346   (CBSC_1,      DQ(7),       bidir,       X,     229,      1,       Z)," &
+     "347   (CBSC_1,      DQ(6),       bidir,       X,     229,      1,       Z)," &
+     "348   (CBSC_1,      DQ(5),       bidir,       X,     229,      1,       Z)," &
+     "349   (CBSC_1,      DQ(4),       bidir,       X,     229,      1,       Z)," &
+     "350   (CBSC_1,      DQ(3),       bidir,       X,     229,      1,       Z)," &
+     "351   (CBSC_1,      DQ(2),       bidir,       X,     229,      1,       Z)," &
+     "352   (CBSC_1,      DQ(1),       bidir,       X,     229,      1,       Z)," &
+     "353   (CBSC_1,      DQ(0),       bidir,       X,     229,      1,       Z)," &
+     "354   (BC_1,        CKE(1),      output3,     X,     227,      1,       Z)," &
+     "355   (BC_1,        CKE(0),      output3,     X,     227,      1,       Z)" ;
+
+end Verde_Processor;
