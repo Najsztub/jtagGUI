@@ -20,6 +20,7 @@
 @@grammar::BSDL
 @@eol_comments :: /--.*?$/
 @@ignorecase :: True
+@@whitespace :: /[\t\s]+/
 
 (* B.5.1 *)
 letters = /[A-Za-z]/ ;
@@ -69,6 +70,7 @@ bsdl_description = "entity" component_name:component_name "is"
     instruction_register_description:instruction_register_description
     [optional_register_description:optional_register_description]
     [register_access_description:register_access_description]
+    [obsoleted_attributes:obsoleted_attributes]
     boundary_scan_register_description:boundary_scan_register_description
     [runbist_description:runbist_description]
     [intest_description:intest_description]
@@ -195,6 +197,7 @@ pattern_list_string = "&".{quote @:opcode_list quote} ;
 instruction_list_string = "&".{quote @:instruction_list quote} ;
 instruction_list = (comma).{[@:instruction_name]} ;
 
+
 (* B.8.12 *)
 optional_register_description = optional_register_stmt [ optional_register_stmt ] ;
 optional_register_stmt = idcode_statement | usercode_statement ;
@@ -217,6 +220,13 @@ std_var_register = reg_name:std_var_reg_name [ left_bracket reg_length:reg_lengt
 std_var_reg_name = "ECID" | "INIT_DATA" | "INIT_STATUS" | "RESET_SELECT" ;
 design_specific_register = reg_name:vhdl_identifier [ left_bracket reg_length:reg_length right_bracket ] ;
 reg_length = integer | asterisk ;
+
+(* B.13.3.1 *)
+obsoleted_attributes = "attribute" @:obsoleted_attribute "of"
+    component_name colon "entity" "is" @:obsoleted_string semicolon;
+obsoleted_attribute = "INSTRUCTION_GUARD" | "INSTRUCTION_DISABLE" |
+"INSTRUCTION_SEQUENCE" | "INSTRUCTION_USAGE" | "BOUNDARY_CELLS" ;
+obsoleted_string = string ;
 
 (* B.8.14 *)
 boundary_scan_register_description = fixed_boundary_stmts:fixed_boundary_stmts | segment_boundary_stmts:segment_boundary_stmts ;
