@@ -32,8 +32,9 @@ class BSDLRepo(panels.BSDLRepo):
     except IOError:
       wx.LogError("Cannot open file '%s'." % pathname)
       self.parent.log("Cannot open file '%s'." % pathname)
-    except tatsu.exceptions.FailedToken:
+    except tatsu.exceptions.FailedToken as ex:
       self.parent.log(', '.join(["BSDL error parsing ",  pathname]))
+      self.parent.log(ex)
     if ast is not None:
       dev = DUT(ast)
       # Upload info to DB

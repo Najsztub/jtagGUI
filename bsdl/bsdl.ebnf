@@ -180,7 +180,8 @@ instruction_register_description =
     instruction_length:instruction_length_stmt
     instruction_opcodes:instruction_opcode_stmt
     instruction_capture:instruction_capture_stmt
-    [instruction_private:instruction_private_stmt] ;
+    [instruction_private:instruction_private_stmt]
+    [instruction_disable:instruction_disable_stmt] ;
 instruction_length_stmt = "attribute" "INSTRUCTION_LENGTH" "of" component_name
     colon "entity" "is" @:integer semicolon ;
 instruction_opcode_stmt = "attribute" "INSTRUCTION_OPCODE" "of" component_name
@@ -188,6 +189,8 @@ instruction_opcode_stmt = "attribute" "INSTRUCTION_OPCODE" "of" component_name
 instruction_capture_stmt = "attribute" "INSTRUCTION_CAPTURE" "of" component_name
     colon "entity" "is" @:pattern_list_string semicolon ;
 instruction_private_stmt = "attribute" "INSTRUCTION_PRIVATE" "of" component_name
+    colon "entity" "is" @:instruction_list_string semicolon ;
+instruction_disable_stmt = "attribute" "INSTRUCTION_DISABLE" "of" component_name
     colon "entity" "is" @:instruction_list_string semicolon ;
 opcode_table_string = "&".{quote (comma).{[@+:opcode_description]} quote} ;
 opcode_description = instruction_name:instruction_name left_paren opcode_list:opcode_list right_paren ;
@@ -224,7 +227,7 @@ reg_length = integer | asterisk ;
 (* B.13.3.1 *)
 obsoleted_attributes = "attribute" @:obsoleted_attribute "of"
     component_name colon "entity" "is" @:obsoleted_string semicolon;
-obsoleted_attribute = "INSTRUCTION_GUARD" | "INSTRUCTION_DISABLE" |
+obsoleted_attribute = "INSTRUCTION_GUARD"  |
 "INSTRUCTION_SEQUENCE" | "INSTRUCTION_USAGE" | "BOUNDARY_CELLS" ;
 obsoleted_string = string ;
 
