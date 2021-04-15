@@ -2,6 +2,7 @@ import unittest
 import logging
 import pprint
 import sys
+import os
 
 from HWLayer import bsdl_parser 
 
@@ -27,10 +28,11 @@ class ParserTestCase(unittest.TestCase):
         cell15_name = bsr[15]['cell_info']['cell_spec']['port_id']
         self.assertEqual(''.join(cell15_name), "NC(1)")
 
-    def test_xylinx(self):
-        ast = self.parser.parseBSDL('bsdl/XC95108.bsdl')
-        bsr = ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_register"]
-        pp = pprint.PrettyPrinter(indent=2)
-        self.log.debug(pp.pprint(bsr[15]))
-        cell15_name = bsr[15]['cell_info']['cell_spec']['port_id']
-        self.assertEqual(''.join(cell15_name), "PB05_12")
+    def test_all(self):
+        bsdl_files = ['bsdl/' + f for f in os.listdir('bsdl/') if f.endswith('.bsd') or f.endswith('.bsdl')]
+        for file in bsdl_files:
+            self.log.debug(f"Importing {file}")
+            ast = self.parser.parseBSDL(file)
+            self.assertIsNotNone(ast)
+            self.log.debug(f"Imported {ast.component_name}, package: {ast.generic_parameter.default_device_package_type}")
+

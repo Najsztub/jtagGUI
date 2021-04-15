@@ -86,7 +86,7 @@ class DUT:
     # Add port logic
     if self.ast["logical_port_description"] is not None:
       for group_id, gr in enumerate(self.ast["logical_port_description"]):
-        # Add "bit_vector" () valueif bit_vector in dir
+        # Add "bit_vector" () value if bit_vector in dir
         if  "bit_vector" in gr['port_dimension']:
           for pid in range(int(gr['port_dimension']["bit_vector"][0]), int(gr['port_dimension']["bit_vector"][2])+1):
             port_name_id = '{0}({1})'.format(gr["identifier_list"][0], pid)
@@ -95,7 +95,7 @@ class DUT:
             self.setPort(port_name_id, "read", '')
             self.setPort(port_name_id, "write", '')
           continue
-        # Else loo over names
+        # Else loop over names
         for port_id, port_name in enumerate(gr["identifier_list"]):
           self.setPort(port_name, "port_group", group_id)
           self.setPort(port_name, "pin_type", gr['pin_type'])

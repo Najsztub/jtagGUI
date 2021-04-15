@@ -13,7 +13,7 @@ if __name__ == "__main__":
     bsdl_model = tatsu.compile(grammar)
 
     bsdl_file = None
-    with open('10k50r240.bsd') as f:
+    with open('bsdl/10k50r240.bsd') as f:
         bsdl_file = f.read()
 
     class BsdlSemantics:
@@ -29,6 +29,6 @@ if __name__ == "__main__":
     # bsdl_model.parse(file.read(), "bsdl_description", semantics=BsdlSemantics(), parseinfo=False, ignorecase=True)
 
     print('# JSON')
-    open('10k50r240.out', 'w').write(json.dumps(tatsu.util.asjson(ast), indent=2))
-    print(ast)
-    print()
+    # open('tests/10k50r240.out', 'w').write(json.dumps(tatsu.util.asjson(ast), indent=2))
+    pp = pprint.PrettyPrinter(indent=2)
+    pp.pprint(ast)
