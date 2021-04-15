@@ -129,13 +129,21 @@ class Mywin(panels.MainFrame):
 
   def loadBSDL(self, file):
     # Parse BSDL file
+    # Compile BSDL parser if not initialized
+    if not self.parent.parser.initialized:
+      self.parent.log("Initializing BSDL parser. Might take about a minute.")
+      self.parent.parser.initialize()
+      self.parent.log("DONE Initializing BSDL parser.")
     try:
+      self.parent.log("Try parsing BSDL file.")
       ast = self.parser.parseBSDL(file)
+      self.parent.log("Parsing DONE.")
       dev = DUT(ast)
       # self.addDev(dev)
       self.m_statusBar1.SetStatusText(file, 1) 
-    except tatsu.exceptions.FailedToken:
-      self.log(', '.join(["BSDL error parsing ",  file]))  
+    except tatsu.exceptions.FailedToken as ex:
+      self.parent.log(f"BSDL error parsing {file}")
+      self.parent.log(ex)
 
   def selectDev(self, devid):
     # Select device in main window

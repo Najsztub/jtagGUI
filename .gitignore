@@ -1,2 +1,3 @@
 *.py[cod]
 .vscode/*
+bsdl/bsdl_repo.sqlite

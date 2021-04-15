@@ -88,6 +88,10 @@ class DefineDevice(panels.DefineDevice):
     # Proceed loading the file chosen by the user
     pathname = openFileDialog.GetPath()
     ast = None
+    if not self.mainW.parser.initialized:
+      self.mainW.log("Initializing BSDL parser. Might take about a minute.")
+      self.mainW.parser.initialize()
+      self.mainW.log("DONE Initializing BSDL parser.")
     try:
       ast = self.mainW.parser.parseBSDL(pathname)
     except IOError:
