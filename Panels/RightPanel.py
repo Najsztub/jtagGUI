@@ -2,6 +2,7 @@ import wx
 import re
 import math
 import string
+from HWLayer.dut import Pin
 
 #######################################################################
 # Define Right panel class
@@ -17,6 +18,10 @@ class RightPanel(wx.Panel):
 
     self.npins =  None
     self.package = None
+
+    self.EMPTY_PIN = Pin()
+    self.EMPTY_PIN.name = 'MISSING'
+    self.EMPTY_PIN.port.type= 'NC'
   
     self.Bind(wx.EVT_SIZE, self.OnSize)
     self.Bind(wx.EVT_PAINT, self.OnPaint) 
@@ -40,7 +45,7 @@ class RightPanel(wx.Panel):
     if bool(re.search("BGA", pkg)): 
       self.pkg = 'BGA'
       # Make sure that we include 'holes' in BGA
-      pin_names = self.dev.pin_dict.keys()
+      pin_names = self.dev.pins.keys()
       pin_gr = [re.match('([A-Za-z]+)([0-9]+)', k).groups() for k in pin_names]
       # Sort rows
       rows = list(set([pt[0] for pt in pin_gr]))
@@ -70,8 +75,7 @@ class RightPanel(wx.Panel):
     # Skip if no pins present
     if self.dev is None or self.dev.pins is None: return
 
-    pen = wx.Pen(wx.Colour(200,200,255)) 
-    dc.SetPen(pen) 
+    dc.SetPen(wx.Pen(wx.Colour(200,200,255))) 
     dc.SetBrush(wx.Brush(wx.Colour(0,255,0), wx.TRANSPARENT)) 
     
     # Get device package and draw appropriate pins
@@ -80,28 +84,32 @@ class RightPanel(wx.Panel):
     else: self.plotTQFP(dc)
 
   def plotPin(self, dc, pin, pt, width):
-    # TODO: Include write state in the picture
     # Set fill colour depending on Pin name
     pin_color = self.mainW.PIN_COLS['oth']
-    port = pin['port_name']
-    if port[0:3].upper() == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
-    elif port[0:3].upper() in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
-    elif port[0:2].upper() == 'IO':  pin_color = self.mainW.PIN_COLS['io']
-    elif port.upper() == 'MISSING':  pin_color = self.mainW.PIN_COLS['nc']
-    elif port[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = self.mainW.PIN_COLS['jtag']
+    port_name = pin.port.name
+    if port_name[0:3].upper() == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
+    elif port_name[0:3].upper() in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
+    elif port_name[0:2].upper() == 'IO':  pin_color = self.mainW.PIN_COLS['io']
+    elif port_name.upper() == 'MISSING':  pin_color = self.mainW.PIN_COLS['nc']
+    elif port_name[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = self.mainW.PIN_COLS['jtag']
+    dc.SetPen(wx.Pen(wx.Colour(200,200,255))) 
     dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
 
     # Plot pin square
     dc.DrawRectangle(pt[0], pt[1], width, width) 
 
     # Draw state
-    if 'read' in pin and pin['read'] != '':
+    if pin.read is not None:
       state_col = self.mainW.PIN_COLS['io_z']
-      if pin['read'] == '0': state_col = self.mainW.PIN_COLS['io_0']
-      elif pin['read'] == '1': state_col = self.mainW.PIN_COLS['io_1']
+      if pin.read == '0': state_col = self.mainW.PIN_COLS['io_0']
+      elif pin.read == '1': state_col = self.mainW.PIN_COLS['io_1']
       
       # Draw circle 
       dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
+
+      # Include pin type in the picture
+      if pin.port.type in ['out']:
+        dc.SetPen(wx.Pen(wx.Colour(26, 33, 171), 1, wx.SOLID))
       dc.DrawCircle(int(pt[0] + 0.5 * width), int(pt[1] + 0.5 * width), int(0.3 * width))
   
   def plotTQFP(self, dc):
@@ -111,22 +119,29 @@ class RightPanel(wx.Panel):
     pin_w = math.floor(rec_b)
     border = min(self.imgx, self.imgy) * 0.1
     coord = [border, border]
+    # Set font
+    font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+    dc.SetFont(font) 
     for i in range(self.npins):
       loc_dir = pt_dir[math.floor(i / side)]
       # Search for item based on on pin nr
       try:
-        it = self.dev.pins[self.dev.pin_dict[str(i+1)]]
+        it = self.dev.pins[str(i+1)]
       except KeyError:
-        it = {'port_name': 'MISSING', 'pin_type': 'NC', 'read': ''}
+        it = self.EMPTY_PIN
       # Draw rectangles for pins
       # Move pins 1 unit, so they do not overlap in corners
       if ( math.floor(i / side) == 2):
+        # Right
         pt = [math.floor(coord[0] + rec_b), math.floor(coord[1] - rec_b)]
       elif (math.floor(i / side) == 1):
+        # Bottom
         pt = [math.floor(coord[0] + rec_b), math.floor(coord[1])]
       elif (math.floor(i / side) == 3):
+        # Top
         pt = [math.floor(coord[0]), math.floor(coord[1] - rec_b)]
       else:
+        # Right
         pt = [math.floor(coord[0]), math.floor(coord[1])]
       
       # Increment coords
@@ -151,9 +166,9 @@ class RightPanel(wx.Panel):
         # Col pin nr
         if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), int(border - rec_b))
         try:
-          it = self.dev.pins[self.dev.pin_dict[self.bga_rows[i] + str(j+1)]]
+          it = self.dev.pins[self.bga_rows[i] + str(j+1)]
         except KeyError:
-          it = {'port_name': 'MISSING', 'pin_type': 'NC', 'read': ''}
+          it = self.EMPTY_PIN
         # Draw pin
         pt =[math.ceil(border + rec_b * j), math.ceil(border + rec_b* i)]
 

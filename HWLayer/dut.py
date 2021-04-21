@@ -20,7 +20,7 @@ class Logic:
 # Pin - physical connection
 class Pin(Logic):
   def __init__(self):
-    self.port = None
+    self.port = Port()
     self.name = None
 
   @property
@@ -42,28 +42,38 @@ class Pin(Logic):
 # Port - Unit functional representation of pin or group of pins
 class Port(Logic):
   def __init__(self):
-    self.name = None
+    self.name = 'MISSING'
     self.pins = []
-    self.type = ""
+    self.type = "-"
     self.dim = None
-    # TODO: Add multiple cells and differentiate behaviour according to cell function
+    # Add multiple cells and differentiate behaviour according to cell function
     self.in_cell = None
     self.out_cell = None
 
+  def reset(self):
+    if self.in_cell is not None:
+      self.in_cell.reset()
+    if self.out_cell is not None:
+      self.out_cell.reset()
+
   @property
   def read(self):
+    if self.in_cell is None: return None
     return self.in_cell.bsr_in
 
   @read.setter
   def read(self, value):
+    if self.in_cell is None: pass
     self.in_cell.bsr_in = value
 
   @property
   def write(self):
+    if self.out_cell is None: return None
     return self.out_cell.bsr_out
 
   @write.setter
   def write(self, value):
+    if self.out_cell is None: pass
     self.out_cell.bsr_out = value
 
   
@@ -77,22 +87,41 @@ class PortMapper(Logic):
   def parsePortDef(self, ast):
     for group_id, gr in enumerate(ast):
       self.ports_group.append([])
-      for port in gr["identifier_list"]: 
-        new_port = Port()
-        new_port.name = port
-        new_port.type = gr['pin_type']
-        new_port.dim = gr['port_dimension']
-        self.ports[new_port.name] = new_port
-        self.ports_group[group_id].append(new_port)
+      if 'bit_vector' in gr['port_dimension']:
+        for pid in range(int(gr['port_dimension']["bit_vector"][0]), int(gr['port_dimension']["bit_vector"][2])+1):
+            port_name_id = '{0}({1})'.format(gr["identifier_list"][0], pid)
+            new_port = Port()
+            new_port.name = port_name_id.upper()
+            new_port.type = gr['pin_type']
+            new_port.dim = gr['port_dimension']
+            self.ports[new_port.name] = new_port
+            self.ports_group[group_id].append(new_port)
+      else:
+        for port in gr["identifier_list"]: 
+          new_port = Port()
+          new_port.name = port.upper()
+          new_port.type = gr['pin_type']
+          new_port.dim = gr['port_dimension']
+          self.ports[new_port.name] = new_port
+          self.ports_group[group_id].append(new_port)
 
   def parsePinDef(self, ast):
     for p in ast:
-      for pn in p['pin_list']:
+      pin_list_len = len(p['pin_list'])
+      for pid, pn in enumerate(p['pin_list']):
+        port_name = p['port_name'].upper()
         # TODO: Create pin(n) in case of multiple pins in 'pin_list'
-        # plist.append({'pin_id': pn, 'port_name': '{0}({1})'.format(p['port_name'], i+start)})
+        if pin_list_len > 1:
+          port_name = '{0}({1})'.format(port_name, pid)
         new_pin = Pin()
-        new_pin.name = pn
-        new_pin.port = self.ports[p['port_name']]
+        new_pin.name = pn.upper()
+
+        # Create port if one does not exist
+        if port_name not in self.ports:
+          new_port = Port()
+          new_port.name = port_name
+          self.ports[new_port.name] = new_port
+        new_pin.port = self.ports[port_name]
         new_pin.port.pins.append(new_pin)
         self.pins[new_pin.name] = new_pin
 
@@ -114,35 +143,32 @@ class Cell(Logic):
     self.function = None
     self.index = None
 
+    self.reset_val = '1'
+
   def parseAst(self):
     cell = self._ast
     cell_spec = cell['cell_info']["cell_spec"]
 
-    # Assign number
+    # Assign BSR index
     self.number = int(cell["cell_number"])
 
-    # Assign function
+    # Assign function name
     self.function = cell_spec['function'].upper()
 
     # Collapse port name
-    port_name = cell_spec['port_id']
     if type(cell_spec['port_id']) is list: 
-      port_name = ''.join(cell_spec['port_id'])
+      port_name = ''.join(cell_spec['port_id']).upper()
       cell_spec['port_id'] = port_name
+    else:
+      port_name = cell_spec['port_id'].upper()
 
-    # Assign ports and cells
+    # Assign cells to ports
+    # Assign port logic based on cell type
     if port_name in self.dut.ports:
       self.port = self.dut.ports[port_name]
-      # TODO: Assign port logic based on cell type
-      if self.function in ["INPUT", "CLOCK", "OBSERVE_ONLY"]:
-        self.port.in_cell = self
-      elif self.function in ["OUTPUT2", "OUTPUT3"]:
-        self.port.out_cell = self
-      elif self.function in ["BIDIR"]:
+      if self.function in ["INPUT", "CLOCK", "OBSERVE_ONLY", "OUTPUT2", "OUTPUT3", "BIDIR"]:
         self.port.in_cell = self
         self.port.out_cell = self
-      
-    cell_spec['cell_id'] = int(cell["cell_number"])
 
     # Reference controll cell
     if "input_or_disable_spec" in cell['cell_info']: 
@@ -150,6 +176,13 @@ class Cell(Logic):
       self.control = self.dut.bsr_cells[int(cell['ctrl']["control_cell"])]
       self.control.disable_value = int(cell['ctrl']["disable_value"]) == 1
 
+    # Add safe bit as default out value
+    if "safe_bit" in cell_spec and cell_spec["safe_bit"] == '0' :
+      self.reset_val = '0'
+    self._bsr_out = self.reset_val
+
+  def reset(self):
+    self._bsr_out = self.reset_val
 
   @property
   def bsr_out(self):

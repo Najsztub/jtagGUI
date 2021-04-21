@@ -130,20 +130,21 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     # Make sure that we have any pins
     if self.mainW.chain[self.active_dev].pins is None: return
     index = 0
-    for key, data in self.mainW.chain[self.active_dev].pins.items():
-      self.m_pinList.InsertItem(index, data['pin_id'])
-      self.m_pinList.SetItem(index, 1, data['port_name'])
-      if 'pin_type' in data:
-        pin_type = data['pin_type']
+    for key, dut_pin in self.mainW.chain[self.active_dev].pins.items():
+      self.m_pinList.InsertItem(index, key)
+      self.m_pinList.SetItem(index, 1, dut_pin.port.name)
+      if dut_pin.port.type != "":
+        pin_type = dut_pin.port.type
       else:
         pin_type = '-'
       self.m_pinList.SetItem(index, 2, pin_type)
-      if 'write' in data:
-        set_val = data['write']
-      else: set_val = ''
+      if dut_pin.write is not None:
+        set_val = dut_pin.write
+      else: 
+        set_val = '-'
       self.m_pinList.SetItem(index, 3, set_val)
-      self.m_pinList.SetItemData(index, key)
-      self.itemDataMap.append([data['pin_id'], data['port_name'], pin_type, set_val])
+      self.m_pinList.SetItemData(index, index)
+      self.itemDataMap.append([key, dut_pin.port.name, pin_type, set_val])
       index += 1
     
   def shiftIR(self, event):
@@ -158,13 +159,13 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     dev = self.mainW.chain[self.active_dev]
     list_item_row = event.GetIndex()
     port_name = self.m_pinList.GetItem(list_item_row, 1).GetText()
-    dev_port = dev.pins[dev.port_map[port_name][0]]
+    dev_port = dev.ports[port_name]
     
     # Do nothing if type linkage or missing
-    if dev_port['pin_type'].lower() in ['-', 'linkage']: return
+    if dev_port.type.lower() in ['-', 'linkage', '']: return
 
     # Show item popup menu and update selected value
-    self.m_pinList.PopupMenu(PinSetup.PinSetup(dev, port_name), event.GetPoint()) 
+    self.m_pinList.PopupMenu(PinSetup.PinSetup(dev, dev_port), event.GetPoint()) 
     set_item = self.m_pinList.GetItem(list_item_row, 3)
-    set_item.SetText(dev_port['write'])
+    set_item.SetText(dev_port.write)
     self.m_pinList.SetItem(set_item)

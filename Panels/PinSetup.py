@@ -22,10 +22,10 @@ class PinSetup(wx.Menu):
     self.Bind(wx.EVT_MENU, self.PinReset, reset)
 
   def PinHigh(self, e):
-    self.device.setPort(self.port, 'write', '1')
+    self.port.write = '1'
 
   def PinLow(self, e):
-    self.device.setPort(self.port, 'write', '0')
+    self.port.write = '0'
     
   def PinReset(self, e):
-    self.device.setPort(self.port, 'write', '')
+    self.port.reset()
