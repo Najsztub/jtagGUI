@@ -120,7 +120,10 @@ class RightPanel(wx.Panel):
     border = min(self.imgx, self.imgy) * 0.1
     coord = [border, border]
     # Set font
-    font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+    if self.npins < 100:
+      font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+    else:
+      font = wx.Font(math.floor(rec_b*0.33), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
     dc.SetFont(font) 
     for i in range(self.npins):
       loc_dir = pt_dir[math.floor(i / side)]
@@ -134,15 +137,19 @@ class RightPanel(wx.Panel):
       if ( math.floor(i / side) == 2):
         # Right
         pt = [math.floor(coord[0] + rec_b), math.floor(coord[1] - rec_b)]
+        dc.DrawText(str(i+1), pt[0] + rec_b, math.ceil(pt[1]))
       elif (math.floor(i / side) == 1):
         # Bottom
         pt = [math.floor(coord[0] + rec_b), math.floor(coord[1])]
+        dc.DrawText(str(i+1), pt[0], math.ceil(pt[1]+rec_b))
       elif (math.floor(i / side) == 3):
         # Top
         pt = [math.floor(coord[0]), math.floor(coord[1] - rec_b)]
+        dc.DrawText(str(i+1), pt[0], math.ceil(pt[1]- rec_b))
       else:
-        # Right
+        # Left
         pt = [math.floor(coord[0]), math.floor(coord[1])]
+        dc.DrawText(str(i+1), pt[0] - rec_b, math.ceil(pt[1]))
       
       # Increment coords
       coord[0] += rec_b * loc_dir[0]
