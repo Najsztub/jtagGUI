@@ -1,5 +1,3 @@
-# Test DUT
-
 import unittest
 import logging
 import sys
@@ -55,12 +53,12 @@ class DUTTestCase(unittest.TestCase):
         index = len(bsr) - 48 - 1
         bsr = bsr[:index] + '1' + bsr[index + 1:]
         self.dev.parseBSR(bsr)
-        pin_st = self.dev.pins[self.dev.port_map['IOF15'][0]]['read']
+        pin_st = self.dev.ports['IOF15'].pins[0].read
         self.assertEqual('1', pin_st)
         # Set IOF15 to 0
         bsr = bsr[:index] + '0' + bsr[index + 1:]
         self.dev.parseBSR(bsr)
-        pin_st = self.dev.pins[self.dev.port_map['IOF15'][0]]['read']
+        pin_st = self.dev.ports['IOF15'].pins[0].read
         self.assertEqual('0', pin_st)
 
     def test_real_bsr(self):

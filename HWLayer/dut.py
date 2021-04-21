@@ -1,12 +1,182 @@
-
-
 # Device Under Test Class
 
-# Pin - physical connection
-# Port - Unit functional representationof pin or group of pins
-# Cell - BSR cell. Can be associated with Port, but not necessarily
-  
+class Logic:
+  """ Base BSDL logic class with AST property """
+  def __init__(self, ast=None):
+    self._ast = ast
 
+  @property
+  def ast(self):
+    return self._ast
+
+  @ast.setter
+  def ast(self, ast):
+    self._ast = ast
+    self.parseAst()
+    
+  def parseAst(self):
+    pass
+
+# Pin - physical connection
+class Pin(Logic):
+  def __init__(self):
+    self.port = None
+    self.name = None
+
+  @property
+  def read(self):
+    return self.port.read
+
+  @read.setter
+  def read(self, value):
+    self.port.read = value
+
+  @property
+  def write(self):
+    return self.port.write
+
+  @write.setter
+  def write(self, value):
+    self.port.write = value
+
+# Port - Unit functional representation of pin or group of pins
+class Port(Logic):
+  def __init__(self):
+    self.name = None
+    self.pins = []
+    self.type = ""
+    self.dim = None
+    # TODO: Add multiple cells and differentiate behaviour according to cell function
+    self.in_cell = None
+    self.out_cell = None
+
+  @property
+  def read(self):
+    return self.in_cell.bsr_in
+
+  @read.setter
+  def read(self, value):
+    self.in_cell.bsr_in = value
+
+  @property
+  def write(self):
+    return self.out_cell.bsr_out
+
+  @write.setter
+  def write(self, value):
+    self.out_cell.bsr_out = value
+
+  
+# PortMapper - Represent pin-port map
+class PortMapper(Logic):
+  def __init__(self):
+    self.pins = {}
+    self.ports = {}
+    self.ports_group = []
+
+  def parsePortDef(self, ast):
+    for group_id, gr in enumerate(ast):
+      self.ports_group.append([])
+      for port in gr["identifier_list"]: 
+        new_port = Port()
+        new_port.name = port
+        new_port.type = gr['pin_type']
+        new_port.dim = gr['port_dimension']
+        self.ports[new_port.name] = new_port
+        self.ports_group[group_id].append(new_port)
+
+  def parsePinDef(self, ast):
+    for p in ast:
+      for pn in p['pin_list']:
+        # TODO: Create pin(n) in case of multiple pins in 'pin_list'
+        # plist.append({'pin_id': pn, 'port_name': '{0}({1})'.format(p['port_name'], i+start)})
+        new_pin = Pin()
+        new_pin.name = pn
+        new_pin.port = self.ports[p['port_name']]
+        new_pin.port.pins.append(new_pin)
+        self.pins[new_pin.name] = new_pin
+
+
+# Cell - BSR cell. Can be associated with Port, but not 
+class Cell(Logic):
+  """
+  BSR Cell definition
+  """
+
+  def __init__(self, dut):
+    self.dut = dut
+    
+    self._bsr_out = None
+    self._bsr_in = None
+
+    self.port = None
+    self.control = None
+    self.function = None
+    self.index = None
+
+  def parseAst(self):
+    cell = self._ast
+    cell_spec = cell['cell_info']["cell_spec"]
+
+    # Assign number
+    self.number = int(cell["cell_number"])
+
+    # Assign function
+    self.function = cell_spec['function'].upper()
+
+    # Collapse port name
+    port_name = cell_spec['port_id']
+    if type(cell_spec['port_id']) is list: 
+      port_name = ''.join(cell_spec['port_id'])
+      cell_spec['port_id'] = port_name
+
+    # Assign ports and cells
+    if port_name in self.dut.ports:
+      self.port = self.dut.ports[port_name]
+      # TODO: Assign port logic based on cell type
+      if self.function in ["INPUT", "CLOCK", "OBSERVE_ONLY"]:
+        self.port.in_cell = self
+      elif self.function in ["OUTPUT2", "OUTPUT3"]:
+        self.port.out_cell = self
+      elif self.function in ["BIDIR"]:
+        self.port.in_cell = self
+        self.port.out_cell = self
+      
+    cell_spec['cell_id'] = int(cell["cell_number"])
+
+    # Reference controll cell
+    if "input_or_disable_spec" in cell['cell_info']: 
+      cell['ctrl'] = cell['cell_info']["input_or_disable_spec"]
+      self.control = self.dut.bsr_cells[int(cell['ctrl']["control_cell"])]
+      self.control.disable_value = int(cell['ctrl']["disable_value"]) == 1
+
+
+  @property
+  def bsr_out(self):
+    return self._bsr_out
+
+  @bsr_out.setter
+  def bsr_out(self, value):
+    self.enable()
+    self._bsr_out = value
+
+  @property
+  def bsr_in(self):
+    return self._bsr_in
+
+  @bsr_in.setter
+  def bsr_in(self, value):
+    self._bsr_in = value
+
+  def enable(self):
+    if self.control is None: return
+    self.control.bsr_out = not self.control.disable_value
+  
+  def disable(self):
+    if self.control is None: return
+    self.control.bsr_out = self.control.disable_value
+
+  
 class DUT:
   def __init__(self, ast=None, idcode=None):
     # Create empty placeholders
@@ -18,7 +188,12 @@ class DUT:
     self.chain_id = None
 
     self.ast = None
-    self.pins = None
+
+    # Initialize the mapper
+    self.portMapper = PortMapper()
+    self.pins = self.portMapper.pins
+    self.ports = self.portMapper.ports
+
     self.registers = [["BYPASS", 1]]
     self.instructions = []
 
@@ -49,61 +224,10 @@ class DUT:
     # Create port list first
     ports = []
     if self.ast["logical_port_description"] is not None:
-      for group_id, gr in enumerate(self.ast["logical_port_description"]):
-        for port in gr["identifier_list"]: 
-          ports.append([port, gr['port_dimension']])
+      self.portMapper.parsePortDef(self.ast["logical_port_description"])
 
     # Create pin list and dict
-    pin_map = self.ast['device_package_pin_mappings'][0]['pin_map']
-    # Create pin(n) in case of multiple pins in 'pin_list'
-    plist = []
-    for p in pin_map:
-      if len(p['pin_list']) > 1:
-        # Loop over pins in 'pin_list'
-        # Search for port name in self.ast["logical_port_description"] 
-        port_dim = [pt[1] for pt in ports if pt[0] == p["port_name"]]
-        start = 1
-        if len(port) > 0 and ( "bit_vector" in port_dim[0]):
-          start = int(port_dim[0]["bit_vector"][0])
-        for i, pn in enumerate(p['pin_list']):
-          plist.append({'pin_id': pn, 'port_name': '{0}({1})'.format(p['port_name'], i+start)})
-      else:
-        plist.append({'pin_id': p['pin_list'][0], 'port_name': p['port_name']})
-
-    # For searching pins by port
-    self.port_map = {}
-    for id, pin in enumerate(plist):
-      if pin['port_name'] in self.port_map:
-        # Append id to port
-        self.port_map[pin['port_name']].append(id)
-        pass
-      # Else create key and list
-      self.port_map[pin['port_name']] = [id]
-
-    # Save as dict of dicts
-    self.pins = dict([(p[0], p[1]) for p in enumerate(plist)])
-
-    # Add port logic
-    if self.ast["logical_port_description"] is not None:
-      for group_id, gr in enumerate(self.ast["logical_port_description"]):
-        # Add "bit_vector" () value if bit_vector in dir
-        if  "bit_vector" in gr['port_dimension']:
-          for pid in range(int(gr['port_dimension']["bit_vector"][0]), int(gr['port_dimension']["bit_vector"][2])+1):
-            port_name_id = '{0}({1})'.format(gr["identifier_list"][0], pid)
-            self.setPort(port_name_id, "port_group", group_id)
-            self.setPort(port_name_id, "pin_type", gr['pin_type'])
-            self.setPort(port_name_id, "read", '')
-            self.setPort(port_name_id, "write", '')
-          continue
-        # Else loop over names
-        for port_id, port_name in enumerate(gr["identifier_list"]):
-          self.setPort(port_name, "port_group", group_id)
-          self.setPort(port_name, "pin_type", gr['pin_type'])
-          self.setPort(port_name, "read", '')
-          self.setPort(port_name, "write", '')
-    
-    # Make pins addressable by pin_id
-    self.pin_dict = dict([(p[1]['pin_id'], p[0]) for p in enumerate(plist)])
+    self.portMapper.parsePinDef(self.ast['device_package_pin_mappings'][0]['pin_map'])
 
   def setPort(self, port, key, value):
     pid = [i for i, x in self.pins.items() if x['port_name'] == port] 
@@ -154,11 +278,11 @@ class DUT:
     # "optional_register_description" - description of registers. Can be list of dicts or a dict
     # Pack in list if dict
     if hasattr(self.ast["optional_register_description"], 'keys'):
-      reg_desc_ast = [self.ast["optional_register_description"]]
+      reg_descast = [self.ast["optional_register_description"]]
     else:
-      reg_desc_ast = self.ast["optional_register_description"]
+      reg_descast = self.ast["optional_register_description"]
     instr = []
-    for desc in reg_desc_ast:
+    for desc in reg_descast:
       reg_keys = [k for k in desc.keys()]
       reg_cont = ''.join(desc[reg_keys[0]])
       inst_len = len(reg_cont)
@@ -166,9 +290,9 @@ class DUT:
       # Add register
       instr.append([inst_name, inst_len])
     # "register_access_description" - register names + len + instr
-    regs_ast = self.ast["register_access_description"]
+    regsast = self.ast["register_access_description"]
     add_regs = []
-    for reg in regs_ast:
+    for reg in regsast:
       reg_name = reg["register"]["reg_name"]
       reg_len = None
       if "reg_length" in reg['register']: reg_len = int(reg["register"]["reg_length"])
@@ -218,74 +342,31 @@ class DUT:
     if self.ast is None: return
     # Parse AST
     ast_cells = self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_register"]
-    self.bsr_cells = [None,] * int(self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_length"])
+
+    self.bsr_cells = tuple(Cell(self) for _ in range(int(self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_length"])))
     for cell in ast_cells:
       cell_id = int(cell["cell_number"])
-      cell_spec = cell['cell_info']["cell_spec"]
-      # Collapse port name
-      if type(cell_spec['port_id']) is list: 
-        port_name = ''.join(cell_spec['port_id'])
-        cell_spec['port_id'] = port_name
-      cell_spec['cell_id'] = cell_id
-      if "input_or_disable_spec" in cell['cell_info']: cell_spec['ctrl'] = cell['cell_info']["input_or_disable_spec"]
-      self.bsr_cells[cell_id] = cell_spec
+      self.bsr_cells[cell_id].ast = cell
 
     # Decide which cells to use as input cell
     # INPUT type has precedence over other types
     self.bsr_in_cells = []
-    cells_funs = {}
-    cid = 0
     for c in self.bsr_cells:
-      if c['function'].upper() not in ['INPUT', 'CLOCK', 'BIDIR', 'OUTPUT2', 'OUTPUT3']: continue
-      if c['port_id'] in cells_funs:
-        if cells_funs[c['port_id']] == 'INPUT': continue
-        elif c['function'].upper() == 'INPUT':
-          # Replace cell with INPUT
-          self.bsr_in_cells[cells_funs[c['port_id']]['cell_id']] = c
-      else:
-        cells_funs[c['port_id']] = {'cell_id' : cid}
-        self.bsr_in_cells.append(c)
-        cid += 1
+      if c.function not in ['INPUT', 'CLOCK', 'BIDIR', 'OUTPUT2', 'OUTPUT3']: continue
+      self.bsr_in_cells.append(c)
 
   def parseBSR(self, bsr):
     bsr_len = len(self.bsr_cells)
     for c in self.bsr_in_cells:
-      port = c['port_id']
-      id = c['cell_id']
-      pin_id = self.port_map[port][0]
-      self.pins[pin_id]['read'] = bsr[bsr_len - 1 - id]
+      # WARNING: Reverse addressing
+      c.bsr_in = bsr[bsr_len - c.number - 1]
 
   def setBSR(self):
-    # Set BSR depending on pin['write'] state and cell control settings
-    bsr_len = len(self.bsr_cells)
-    bsr = ['0'] * bsr_len
+    # Set BSR depending on cell state
     nset = 0
-    for c in self.bsr_cells:
-      if c['function'].upper() not in ['BIDIR', 'OUTPUT2', 'OUTPUT3']: continue
-      port = c['port_id']
-      pin_id = self.port_map[port][0]
-      out_val = self.pins[pin_id]['write']
-      if out_val != '': 
-        # Set the state of the pin + ctrl cell
-        bsr[bsr_len - 1 - c['cell_id']] = str(out_val)
-        nset += 1
-        # Inverse the control bit
-        if 'ctrl' not in c: continue
-        ccell_en = c['ctrl']["disable_value"]
-        if ccell_en == '1':
-          bsr[bsr_len - 1 - int(c['ctrl']["control_cell"])] = '0'
-        elif ccell_en == '0':
-          bsr[bsr_len - 1 - int(c['ctrl']["control_cell"])] = '1'
-        else: bsr[bsr_len - 1 - int(c['ctrl']["control_cell"])] = '0'
-      elif 'ctrl' in c:
-        # Inverse disable out cell
-        ccell_en = c['ctrl']["disable_value"]
-        bsr[bsr_len - 1 - int(c['ctrl']["control_cell"])] = ccell_en
-
+    bsr = [ '1' if c.bsr_out else '0' for c in self.bsr_cells]
     bsr = ''.join(bsr)
     return (nset, bsr)
-
-
 
   def readBSR(self, bsr):
     self.bsr.reg = bsr
