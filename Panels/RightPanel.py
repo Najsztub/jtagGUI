@@ -25,7 +25,12 @@ class RightPanel(wx.Panel):
   
     self.Bind(wx.EVT_SIZE, self.OnSize)
     self.Bind(wx.EVT_PAINT, self.OnPaint) 
+    self.Bind(wx.EVT_MOUSEWHEEL, self.OnZoom) 
     self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+
+    self.origin = [0, 0]
+    self.logical_origin = [0,0]
+    self.scale = 1
 
   def setDevice(self, dev):
     self.dev = dev
@@ -62,12 +67,40 @@ class RightPanel(wx.Panel):
     self.Refresh()
 
   # TODO: Add selected pin highligth
-  # TODO: Add TQFP pin nr & labels
+
   # TODO: Add pin menu/panel
   
+  def OnZoom(self, event):
+    """ Scale on mouse scrool """
+    scale = -event.GetWheelRotation()/event.GetWheelDelta()
+    pt = event.GetPosition()
+
+    dx = (self.logical_origin[0] - pt.x) * scale 
+    dy = (self.logical_origin[1] - pt.y) * scale 
+    
+    self.origin[0] += dx /self.scale
+    self.origin[1] += dy /self.scale
+
+    self.origin[0] = round(self.origin[0])
+    self.origin[1] = round(self.origin[1])
+    
+    self.scale += scale
+    if self.scale < 0.01:
+      self.scale = 0.01
+    if self.scale > 100:
+      self.scale = 100
+
+    self.Refresh()
+
   def OnPaint(self, e): 
     self.imgx, self.imgy = self.GetClientSize()
+
     dc =  wx.AutoBufferedPaintDC(self)
+    dc.SetUserScale(self.scale, self.scale)
+    dc.SetDeviceOrigin(self.origin[0], self.origin[1])
+
+    self.logical_origin = dc.LogicalToDevice(0,0)
+
     brush = wx.Brush("white")  
     dc.SetBackground(brush)  
     dc.Clear() 
@@ -110,15 +143,15 @@ class RightPanel(wx.Panel):
       # Include pin type in the picture
       if pin.port.type in ['out']:
         dc.SetPen(wx.Pen(wx.Colour(26, 33, 171), 1, wx.SOLID))
-      dc.DrawCircle(int(pt[0] + 0.5 * width), int(pt[1] + 0.5 * width), int(0.3 * width))
+      dc.DrawCircle((pt[0] + 0.5 * width), (pt[1] + 0.5 * width), (0.3 * width))
   
   def plotTQFP(self, dc):
-    side = math.ceil(self.npins / 4)
+    side = math.ceil((self.npins) / 4)
     pt_dir = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     rec_b = min(self.imgx, self.imgy) * .8 / side
-    pin_w = math.floor(rec_b)
+    pin_w = int(rec_b/2)*2
     border = min(self.imgx, self.imgy) * 0.1
-    coord = [border, border]
+    coord = [math.ceil(border), math.ceil(border)]
     # Set font
     if self.npins < 100:
       font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
@@ -136,20 +169,20 @@ class RightPanel(wx.Panel):
       # Move pins 1 unit, so they do not overlap in corners
       if ( math.floor(i / side) == 2):
         # Right
-        pt = [math.floor(coord[0] + rec_b), math.floor(coord[1] - rec_b)]
-        dc.DrawText(str(i+1), pt[0] + rec_b, math.ceil(pt[1]))
+        pt = [(coord[0] + rec_b), (coord[1] - rec_b)]
+        dc.DrawText(str(i+1), pt[0] + rec_b, (pt[1]))
       elif (math.floor(i / side) == 1):
         # Bottom
-        pt = [math.floor(coord[0] + rec_b), math.floor(coord[1])]
-        dc.DrawText(str(i+1), pt[0], math.ceil(pt[1]+rec_b))
+        pt = [(coord[0] + rec_b), (coord[1])]
+        dc.DrawText(str(i+1), pt[0], (pt[1]+rec_b))
       elif (math.floor(i / side) == 3):
         # Top
-        pt = [math.floor(coord[0]), math.floor(coord[1] - rec_b)]
-        dc.DrawText(str(i+1), pt[0], math.ceil(pt[1]- rec_b))
+        pt = [(coord[0]), (coord[1] - rec_b)]
+        dc.DrawText(str(i+1), pt[0], (pt[1]- rec_b))
       else:
         # Left
-        pt = [math.floor(coord[0]), math.floor(coord[1])]
-        dc.DrawText(str(i+1), pt[0] - rec_b, math.ceil(pt[1]))
+        pt = [(coord[0]), (coord[1])]
+        dc.DrawText(str(i+1), pt[0] - rec_b, (pt[1]))
       
       # Increment coords
       coord[0] += rec_b * loc_dir[0]
@@ -161,7 +194,7 @@ class RightPanel(wx.Panel):
   def plotBGA(self, dc):
     side = math.ceil(math.sqrt(self.npins))
     rec_b = min(self.imgx, self.imgy) * .8 / side
-    pin_w = math.floor(rec_b)
+    pin_w = int(rec_b/2)*2
     border = min(self.imgx, self.imgy) * 0.1
     # Set font
     font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
@@ -177,7 +210,7 @@ class RightPanel(wx.Panel):
         except KeyError:
           it = self.EMPTY_PIN
         # Draw pin
-        pt =[math.ceil(border + rec_b * j), math.ceil(border + rec_b* i)]
+        pt =[(border + rec_b * j),(border + rec_b* i)]
 
         # Draw pin
         self.plotPin(dc, it, pt, pin_w)
