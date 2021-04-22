@@ -166,7 +166,13 @@ class Cell(Logic):
     # Assign port logic based on cell type
     if port_name in self.dut.ports:
       self.port = self.dut.ports[port_name]
-      if self.function in ["INPUT", "CLOCK", "OBSERVE_ONLY", "OUTPUT2", "OUTPUT3", "BIDIR"]:
+      if self.function in ["INPUT", "CLOCK", "OBSERVE_ONLY"]:
+        self.port.in_cell = self
+      elif self.function in ["OUTPUT2", "OUTPUT3"]:
+        self.port.out_cell = self
+        if self.port.in_cell is None:
+          self.port.in_cell = self
+      elif self.function in ["BIDIR"]:
         self.port.in_cell = self
         self.port.out_cell = self
 
@@ -395,9 +401,11 @@ class DUT:
       c.bsr_in = bsr[bsr_len - c.number - 1]
 
   def setBSR(self):
+    bsr_len = len(self.bsr_cells)
     # Set BSR depending on cell state
+    # bsr[bsr_len - 1 - c['cell_id']] = str(out_val)
     nset = 0
-    bsr = [ '1' if c.bsr_out else '0' for c in self.bsr_cells]
+    bsr = [ '1' if c.bsr_out == '1' else '0' for c in reversed(self.bsr_cells)]
     bsr = ''.join(bsr)
     return (nset, bsr)
 

@@ -75,20 +75,21 @@ class RightPanel(wx.Panel):
     scale = -event.GetWheelRotation()/event.GetWheelDelta()
     pt = event.GetPosition()
 
-    dx = (self.logical_origin[0] - pt.x) * scale 
-    dy = (self.logical_origin[1] - pt.y) * scale 
-    
-    self.origin[0] += dx /self.scale
-    self.origin[1] += dy /self.scale
+    if self.scale > 0.1 and self.scale < 10:
+      dx = (self.logical_origin[0] - pt.x) * scale 
+      dy = (self.logical_origin[1] - pt.y) * scale 
+      
+      self.origin[0] += dx /self.scale
+      self.origin[1] += dy /self.scale
 
-    self.origin[0] = round(self.origin[0])
-    self.origin[1] = round(self.origin[1])
+      self.origin[0] = round(self.origin[0])
+      self.origin[1] = round(self.origin[1])
     
     self.scale += scale
-    if self.scale < 0.01:
-      self.scale = 0.01
-    if self.scale > 100:
-      self.scale = 100
+    if self.scale < 0.1:
+      self.scale = 0.1
+    if self.scale > 10:
+      self.scale = 10
 
     self.Refresh()
 
