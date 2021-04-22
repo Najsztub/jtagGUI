@@ -1,3 +1,13 @@
+## Updates
+
+### Update 22/04/21
+
+    - Refactored `DUT` (Device Under Test) class creating a more logical structure. Avoids working directly with BSDL AST dictionaries;
+    - Added pin numbers to QFL packages;
+    - Added zoom using mouse scrollbar to package plots;
+    - Moved BDSL parser initialization to start only when needed. Shortens application run time;
+    - Importing bad BSDL files gives an error message in the log frame.
+
 ## JTAGViewer
 
 This code presents an approach to combine 3 tools into a JTAG test chain visualizer.
