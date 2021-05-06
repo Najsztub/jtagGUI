@@ -110,7 +110,7 @@ class PortMapper(Logic):
       pin_list_len = len(p['pin_list'])
       for pid, pn in enumerate(p['pin_list']):
         port_name = p['port_name'].upper()
-        # TODO: Create pin(n) in case of multiple pins in 'pin_list'
+        # Create pin(n) in case of multiple pins in 'pin_list'
         if pin_list_len > 1:
           port_name = '{0}({1})'.format(port_name, pid)
         new_pin = Pin()
@@ -180,10 +180,15 @@ class Cell(Logic):
     if "input_or_disable_spec" in cell['cell_info']: 
       cell['ctrl'] = cell['cell_info']["input_or_disable_spec"]
       self.control = self.dut.bsr_cells[int(cell['ctrl']["control_cell"])]
-      if int(cell['ctrl']["disable_value"]) == 1:
-        self.control.disable_value = '1'
+      if cell['ctrl']["disable_value"] == '1':
+        disable_value = '1'
       else:
-        self.control.disable_value = '0'
+        disable_value = '0'
+      # Set disable value and 
+      self.control.disable_value = disable_value
+      self.control.reset_val = disable_value
+      self.control.bsr_out = disable_value
+
 
     # Add safe bit as default out value
     if "safe_bit" in cell_spec and cell_spec["safe_bit"] == '0' :
@@ -414,6 +419,7 @@ class DUT:
     bsr_len = len(self.bsr_cells)
     # Set BSR depending on cell state
     # bsr[bsr_len - 1 - c['cell_id']] = str(out_val)
+    # TODO: Fix set
     nset = 1
     bsr = [ '1' if c.bsr_out == '1' else '0' for c in reversed(self.bsr_cells)]
     bsr = ''.join(bsr)
