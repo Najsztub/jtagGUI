@@ -180,7 +180,10 @@ class Cell(Logic):
     if "input_or_disable_spec" in cell['cell_info']: 
       cell['ctrl'] = cell['cell_info']["input_or_disable_spec"]
       self.control = self.dut.bsr_cells[int(cell['ctrl']["control_cell"])]
-      self.control.disable_value = int(cell['ctrl']["disable_value"]) == 1
+      if int(cell['ctrl']["disable_value"]) == 1:
+        self.control.disable_value = '1'
+      else:
+        self.control.disable_value = '0'
 
     # Add safe bit as default out value
     if "safe_bit" in cell_spec and cell_spec["safe_bit"] == '0' :
@@ -209,7 +212,10 @@ class Cell(Logic):
 
   def enable(self):
     if self.control is None: return
-    self.control.bsr_out = not self.control.disable_value
+    if self.control.disable_value == '0':
+      self.control.bsr_out = '1'
+    else:
+      self.control.bsr_out = '0'
   
   def disable(self):
     if self.control is None: return
@@ -311,7 +317,8 @@ class DUT:
       self.registers.append(["IR", int(self.ast["instruction_register_description"]["instruction_length"])])
     
     # And now BSR
-    if 'BSR' not in [r[0] for r in self.registers]: 
+    # TODO: Fix in cases if BSR = BOUNDARY
+    if 'BSR' not in [r[0] for r in self.registers] and 'BOUNDARY' not in [r[0] for r in self.registers]: 
       self.registers.append(["BSR", int(self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_length"])])
     
     # "optional_register_description" - description of registers. Can be list of dicts or a dict
@@ -330,7 +337,7 @@ class DUT:
       instr.append([inst_name, inst_len])
     # "register_access_description" - register names + len + instr
     regsast = self.ast["register_access_description"]
-    add_regs = []
+
     for reg in regsast:
       reg_name = reg["register"]["reg_name"]
       reg_len = None
@@ -346,6 +353,9 @@ class DUT:
             # Also del the item from instr. I will use remaining not found instr as reg names
             del instr[reg_lens[0]]
         # Append register to self
+        # TODO: FIx
+        if reg_len is None:
+          reg_len = int(self.ast["boundary_scan_register_description"]["fixed_boundary_stmts"]["boundary_length"])
         if reg_name not in [r[0] for r in self.registers]: self.registers.append([reg_name, reg_len])
         # Append instruction
         if inst_name not in [r[0] for r in self.instructions]: self.instructions.append([inst_name, None, reg_name])
@@ -404,7 +414,7 @@ class DUT:
     bsr_len = len(self.bsr_cells)
     # Set BSR depending on cell state
     # bsr[bsr_len - 1 - c['cell_id']] = str(out_val)
-    nset = 0
+    nset = 1
     bsr = [ '1' if c.bsr_out == '1' else '0' for c in reversed(self.bsr_cells)]
     bsr = ''.join(bsr)
     return (nset, bsr)

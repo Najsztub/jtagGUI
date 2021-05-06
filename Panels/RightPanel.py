@@ -43,7 +43,13 @@ class RightPanel(wx.Panel):
     if p_pins is not None:
       self.npins = int(p_pins[0])
     else:
-      self.npins = len(dev.pins)
+      # Discover number of pins if none in package description
+      try:
+        npins = max([int(p) for p in self.dev.pins.keys()]) + 1
+      except ValueError:
+        npins = 0
+      npins = max(npins, len(dev.pins))
+      self.npins = npins
 
     # Package specific parsing
     pkg = self.dev.package
@@ -121,7 +127,7 @@ class RightPanel(wx.Panel):
     # Set fill colour depending on Pin name
     pin_color = self.mainW.PIN_COLS['oth']
     port_name = pin.port.name
-    if port_name[0:3].upper() == 'VCC': pin_color = self.mainW.PIN_COLS['vcc']
+    if port_name[0:3].upper() in ['VCC', 'VDD']: pin_color = self.mainW.PIN_COLS['vcc']
     elif port_name[0:3].upper() in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
     elif port_name[0:2].upper() == 'IO':  pin_color = self.mainW.PIN_COLS['io']
     elif port_name.upper() == 'MISSING':  pin_color = self.mainW.PIN_COLS['nc']
