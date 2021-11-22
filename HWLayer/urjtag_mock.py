@@ -15,10 +15,10 @@ class chain:
     self.j_cable = args[0]
 
   def tap_detect(self):
-    sys.stdout.write("Detected chain of 5")
+    sys.stdout.write("Detected chain of 6")
 
   def len(self):
-    return 5
+    return 6
 
   def part(self, id):
     if id == 0 : self.bsr_len = 798
@@ -26,6 +26,7 @@ class chain:
     elif id == 2: self.bsr_len = 240
     elif id == 3: self.bsr_len = 960
     elif id == 4: self.bsr_len = 202
+    elif id == 5: self.bsr_len = 1080
     else: pass
 
   def addpart(self, ir_len):
@@ -37,6 +38,7 @@ class chain:
     elif id == 2: return int('00000010000010100001000011011101', 2)
     elif id == 3: return int('00000001000001010000000011011101', 2)
     elif id == 4: return int('00101000001001110000000000010011', 2)
+    elif id == 5: return int('00000010000011110010000011011101', 2)
 
     else: return None
     
