@@ -106,7 +106,8 @@ class RightPanel(wx.Panel):
     dc.SetUserScale(self.scale, self.scale)
     dc.SetDeviceOrigin(self.origin[0], self.origin[1])
 
-    self.logical_origin = dc.LogicalToDevice(0,0)
+    # self.logical_origin = dc.LogicalToDevice(0,0)
+    self.logical_origin = wx.Point(dc.LogicalToDeviceX(0),dc.LogicalToDeviceX(0))
 
     brush = wx.Brush("white")  
     dc.SetBackground(brush)  
