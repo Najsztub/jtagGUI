@@ -86,8 +86,9 @@ class RightPanel(wx.Panel):
     self.imgx, self.imgy = self.GetClientSize()
 
     dc =  wx.AutoBufferedPaintDC(self)
-    dc.SetLogicalScale(self.scale, self.scale)
-    dc.SetLogicalOrigin(self.origin[0], self.origin[1])
+
+    dc.SetDeviceOrigin(self.origin[0], self.origin[1])
+    dc.SetUserScale(self.scale, self.scale)
 
     brush = wx.Brush("white")  
     dc.SetBackground(brush)  
@@ -214,8 +215,8 @@ class RightPanel(wx.Panel):
     if e.Dragging() and e.LeftIsDown():
       x, y = e.GetPosition()
       delta = (x - self.left_pos[0], y - self.left_pos[1])
-      self.origin[0] = self.orig_origin[0] - delta[0] / self.scale
-      self.origin[1] = self.orig_origin[1] - delta[1] / self.scale
+      self.origin[0] = self.orig_origin[0] + delta[0] 
+      self.origin[1] = self.orig_origin[1] + delta[1] 
       self.Refresh()
 
   def OnZoom(self, event):
@@ -224,14 +225,14 @@ class RightPanel(wx.Panel):
     scaling_factor = -event.GetWheelRotation()/event.GetWheelDelta() * 0.1
 
     pt = event.GetPosition()
-    
+
     if self.scale > 0.1 and self.scale < 10:
 
-      dx = (pt.x / self.scale ) * scaling_factor 
-      dy = (pt.y / self.scale ) * scaling_factor
+      dx = (pt.x - self.origin[0]) * scaling_factor 
+      dy = (pt.y - self.origin[1]) * scaling_factor
       
-      self.origin[0] += dx
-      self.origin[1] += dy
+      self.origin[0] -= dx
+      self.origin[1] -= dy
     
     self.scale *= (1+scaling_factor)
     if self.scale < 0.1:
