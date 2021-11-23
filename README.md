@@ -1,5 +1,10 @@
 ## Updates
 
+### Update 23/11/21
+
+- Added dragging to pin panel;
+- Improved zooming;
+
 ### Update 22/04/21
 
 - Refactored `DUT` (Device Under Test) class creating a more logical structure. Avoids working directly with BSDL AST dictionaries;

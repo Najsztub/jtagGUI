@@ -23,13 +23,19 @@ class RightPanel(wx.Panel):
     self.EMPTY_PIN.name = 'MISSING'
     self.EMPTY_PIN.port.type= 'NC'
   
+    # Painting + repainting on resize
     self.Bind(wx.EVT_SIZE, self.OnSize)
     self.Bind(wx.EVT_PAINT, self.OnPaint) 
+    # Zooming
     self.Bind(wx.EVT_MOUSEWHEEL, self.OnZoom) 
-    self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+    # Dragging
+    self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+    self.Bind(wx.EVT_MOTION, self.OnMouseMove)
 
+    self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+    
+    # Use only logical coordinates
     self.origin = [0, 0]
-    self.logical_origin = [0,0]
     self.scale = 1
 
   def setDevice(self, dev):
@@ -76,37 +82,12 @@ class RightPanel(wx.Panel):
 
   # TODO: Add pin menu/panel
   
-  def OnZoom(self, event):
-    """ Scale on mouse scrool """
-    scale = -event.GetWheelRotation()/event.GetWheelDelta()
-    pt = event.GetPosition()
-
-    if self.scale > 0.1 and self.scale < 10:
-      dx = (self.logical_origin[0] - pt.x) * scale 
-      dy = (self.logical_origin[1] - pt.y) * scale 
-      
-      self.origin[0] += dx /self.scale
-      self.origin[1] += dy /self.scale
-
-      self.origin[0] = round(self.origin[0])
-      self.origin[1] = round(self.origin[1])
-    
-    self.scale += scale
-    if self.scale < 0.1:
-      self.scale = 0.1
-    if self.scale > 10:
-      self.scale = 10
-
-    self.Refresh()
-
   def OnPaint(self, e): 
     self.imgx, self.imgy = self.GetClientSize()
 
     dc =  wx.AutoBufferedPaintDC(self)
-    dc.SetUserScale(self.scale, self.scale)
-    dc.SetDeviceOrigin(self.origin[0], self.origin[1])
-
-    self.logical_origin = wx.Point(dc.LogicalToDeviceX(0),dc.LogicalToDeviceX(0))
+    dc.SetLogicalScale(self.scale, self.scale)
+    dc.SetLogicalOrigin(self.origin[0], self.origin[1])
 
     brush = wx.Brush("white")  
     dc.SetBackground(brush)  
@@ -221,3 +202,41 @@ class RightPanel(wx.Panel):
 
         # Draw pin
         self.plotPin(dc, it, pt, pin_w)
+
+  # Dragging 
+  def OnLeftDown(self, e):
+    pt = e.GetPosition()
+    self.left_pos = pt
+    self.orig_origin = self.origin + []
+
+  def OnMouseMove(self, e):
+    
+    if e.Dragging() and e.LeftIsDown():
+      x, y = e.GetPosition()
+      delta = (x - self.left_pos[0], y - self.left_pos[1])
+      self.origin[0] = self.orig_origin[0] - delta[0] / self.scale
+      self.origin[1] = self.orig_origin[1] - delta[1] / self.scale
+      self.Refresh()
+
+  def OnZoom(self, event):
+    """ Scale on mouse scroll """
+    # Calculate scaling factor 
+    scaling_factor = -event.GetWheelRotation()/event.GetWheelDelta() * 0.1
+
+    pt = event.GetPosition()
+    
+    if self.scale > 0.1 and self.scale < 10:
+
+      dx = (pt.x / self.scale ) * scaling_factor 
+      dy = (pt.y / self.scale ) * scaling_factor
+      
+      self.origin[0] += dx
+      self.origin[1] += dy
+    
+    self.scale *= (1+scaling_factor)
+    if self.scale < 0.1:
+      self.scale = 0.1
+    if self.scale > 10:
+      self.scale = 10
+
+    self.Refresh()
