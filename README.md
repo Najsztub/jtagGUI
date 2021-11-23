@@ -1,19 +1,3 @@
-## Updates
-
-### Update 23/11/21
-
-- Added dragging to pin panel;
-- Improved zooming;
-
-### Update 22/04/21
-
-- Refactored `DUT` (Device Under Test) class creating a more logical structure. Avoids working directly with BSDL AST dictionaries;
-- Added pin numbers to QFL packages;
-- Added zoom using mouse scrollbar to package plots;
-- Moved BDSL parser initialization to start only when needed. Shortens application run time;
-- Importing bad BSDL files gives an error message in the log frame.
-
-
 ## JTAGViewer
 
 This code presents an approach to combine 3 tools into a JTAG test chain visualizer.
@@ -47,12 +31,29 @@ By default the instruction register (IR) is set to BYPASS. If you want to view a
 
 You can do this by double clicking on the SAMPLE instruction. The instruction is ready to be loaded into the IR (which is indicated by the '<' mark). You then shift the instruction by clicking the 'Shift IR' button (also with '<' indicating that an instruction is ready to be loaded). You should be able to access the BSR register now, showing pin status after shifting DR, by clicking the 'Shift DR' button.
 
+Setting pin values is avaliable after loading the EXTEST instruction in to the IR.
+
 To enable auto-refresh click 'Chain', then select the refresh period in the 'DR auto update' submenu.
 
-## Discalimer
+## Updates
+
+### Update 23/11/21
+
+- Added dragging to pin panel;
+- Improved zooming;
+
+### Update 22/04/21
+
+- Refactored `DUT` (Device Under Test) class creating a more logical structure. Avoids working directly with BSDL AST dictionaries;
+- Added pin numbers to QFL packages;
+- Added zoom using mouse scrollbar to package plots;
+- Moved BDSL parser initialization to start only when needed. Shortens application run time;
+- Importing bad BSDL files gives an error message in the log frame.
+
+## Disclaimer
 
 Still this is not any kind of production software, only a demonstration with shameful amount of hackery. It's been tested with limited number of devices and only one JTAG cable. Thus it will undergo changes and refinements.
 
-I kindly appreciate suggestions and finding any mistakes. 
+I kindly appreciate suggestions and pointing out any mistakes. 
 
 I do not take any responsibility for this software nor any potential damage it causes. Use it on your own responsibility.
