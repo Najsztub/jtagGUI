@@ -23,6 +23,9 @@ class Mywin(panels.MainFrame):
   def __init__(self, parent, title, parser = None): 
     panels.MainFrame.__init__(self, parent)  
 
+    # Set icon
+    self.SetIcon(wx.Icon("Panels/app.ico", wx.BITMAP_TYPE_ICO))
+
     # Set timer period to OFF :0 
     self.dr_auto = 0
     self.dr_auto_timer = None
