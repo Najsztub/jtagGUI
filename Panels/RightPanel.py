@@ -206,12 +206,15 @@ class RightPanel(wx.Panel):
 
   # Dragging 
   def OnLeftDown(self, e):
+    if self.dev is None:
+      return
     pt = e.GetPosition()
     self.left_pos = pt
     self.orig_origin = self.origin + []
 
   def OnMouseMove(self, e):
-    
+    if self.dev is None:
+      return
     if e.Dragging() and e.LeftIsDown():
       x, y = e.GetPosition()
       delta = (x - self.left_pos[0], y - self.left_pos[1])
@@ -220,6 +223,8 @@ class RightPanel(wx.Panel):
       self.Refresh()
 
   def OnZoom(self, event):
+    if self.dev is None:
+      return
     """ Scale on mouse scroll """
     # Calculate scaling factor 
     scaling_factor = -event.GetWheelRotation()/event.GetWheelDelta() * 0.1
