@@ -46,6 +46,7 @@ class Port(Logic):
     self.pins = []
     self.type = "-"
     self.dim = None
+    self.is_set = False
     # Add multiple cells and differentiate behaviour according to cell function
     self.in_cell = None
     self.out_cell = None
@@ -55,6 +56,7 @@ class Port(Logic):
       self.in_cell.reset()
     if self.out_cell is not None:
       self.out_cell.reset()
+    self.is_set = False
 
   @property
   def read(self):
@@ -64,6 +66,7 @@ class Port(Logic):
   @read.setter
   def read(self, value):
     if self.in_cell is None: pass
+    self.is_set = True
     self.in_cell.bsr_in = value
 
   @property
@@ -74,6 +77,7 @@ class Port(Logic):
   @write.setter
   def write(self, value):
     if self.out_cell is None: pass
+    self.is_set = True
     self.out_cell.bsr_out = value
 
   
@@ -197,6 +201,7 @@ class Cell(Logic):
 
   def reset(self):
     self._bsr_out = self.reset_val
+    self.disable()
 
   @property
   def bsr_out(self):

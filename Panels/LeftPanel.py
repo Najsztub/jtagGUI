@@ -135,13 +135,19 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.m_pinList.SetItem(index, 1, dut_pin.port.name)
       if dut_pin.port.type != "":
         pin_type = dut_pin.port.type
+        if not dut_pin.port.is_set:
+          set_val = ''  
+        elif dut_pin.write is not None:
+          set_val = dut_pin.write
       else:
         pin_type = '-'
+      
+      if pin_type not in ['inout', 'out']:
+        set_val = 'Not avaliable'
+      
+      
       self.m_pinList.SetItem(index, 2, pin_type)
-      if dut_pin.write is not None:
-        set_val = dut_pin.write
-      else: 
-        set_val = '-'
+
       self.m_pinList.SetItem(index, 3, set_val)
       self.m_pinList.SetItemData(index, index)
       self.itemDataMap.append([key, dut_pin.port.name, pin_type, set_val])
@@ -162,10 +168,13 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     dev_port = dev.ports[port_name]
     
     # Do nothing if type linkage or missing
-    if dev_port.type.lower() in ['-', 'linkage', '']: return
+    if dev_port.type.lower() in ['-', 'linkage', 'in', '']: return
 
     # Show item popup menu and update selected value
     self.m_pinList.PopupMenu(PinSetup.PinSetup(dev, dev_port), event.GetPoint()) 
     set_item = self.m_pinList.GetItem(list_item_row, 3)
-    set_item.SetText(dev_port.write)
+    if dev_port.is_set:
+      set_item.SetText(dev_port.write)
+    else: 
+      set_item.SetText('')
     self.m_pinList.SetItem(set_item)
