@@ -243,6 +243,12 @@ class RightPanel(wx.Panel):
 
     pt = event.GetPosition()
 
+    # Change the scaling factor to give max 10 or min 0.1 scale
+    if self.scale * (1+scaling_factor) < 0.1:
+      scaling_factor = 0.1 / self.scale - 1
+    if self.scale * (1+scaling_factor) > 10:
+      scaling_factor = 10 / self.scale - 1
+
     if self.scale > 0.1 and self.scale < 10:
 
       dx = (pt.x - self.origin[0]) * scaling_factor 
