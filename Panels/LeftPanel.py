@@ -145,9 +145,7 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       if pin_type not in ['inout', 'out']:
         set_val = 'Not avaliable'
       
-      
       self.m_pinList.SetItem(index, 2, pin_type)
-
       self.m_pinList.SetItem(index, 3, set_val)
       self.m_pinList.SetItemData(index, index)
       self.itemDataMap.append([key, dut_pin.port.name, pin_type, set_val])

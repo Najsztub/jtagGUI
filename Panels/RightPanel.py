@@ -120,19 +120,31 @@ class RightPanel(wx.Panel):
     # Plot pin square
     dc.DrawRectangle(pt[0], pt[1], width, width) 
 
-    # Draw state
-    if pin.read is not None:
-      state_col = self.mainW.PIN_COLS['io_z']
-      if pin.read == '0': state_col = self.mainW.PIN_COLS['io_0']
-      elif pin.read == '1': state_col = self.mainW.PIN_COLS['io_1']
-      
-      # Draw circle 
-      dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
+    # Draw value to write if pin setting is enabled
+    if pin.port.is_set:
+      if pin.write == '0': 
+        dc.SetBrush(wx.Brush(self.mainW.PIN_COLS['io_0'], wx.BRUSHSTYLE_SOLID))
+      elif pin.write == '1': 
+        dc.SetBrush(wx.Brush(self.mainW.PIN_COLS['io_1'], wx.BRUSHSTYLE_SOLID))
+      dc.DrawPolygon([
+        (pt[0], pt[1]),
+        (pt[0] + width, pt[1] + width),
+        (pt[0] + width, pt[1])
+      ])
 
-      # Include pin type in the picture
-      if pin.port.type in ['out']:
-        dc.SetPen(wx.Pen(wx.Colour(26, 33, 171), 1, wx.SOLID))
-      dc.DrawCircle((pt[0] + 0.5 * width), (pt[1] + 0.5 * width), (0.3 * width))
+    # Draw state if value present, else return
+    if pin.read is None: return
+    state_col = self.mainW.PIN_COLS['io_z']
+    if pin.read == '0': state_col = self.mainW.PIN_COLS['io_0']
+    elif pin.read == '1': state_col = self.mainW.PIN_COLS['io_1']
+      
+    # Draw circle 
+    dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
+
+    # Include pin type in the picture
+    if pin.port.type in ['out']:
+      dc.SetPen(wx.Pen(wx.Colour(26, 33, 171), 1, wx.SOLID))
+    dc.DrawCircle((pt[0] + 0.5 * width), (pt[1] + 0.5 * width), (0.3 * width))
   
   def plotTQFP(self, dc):
     side = math.ceil((self.npins) / 4)
