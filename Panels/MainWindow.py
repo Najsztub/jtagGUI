@@ -1,4 +1,5 @@
 import wx
+import wx.adv
 import tatsu
 import re
 from datetime import datetime
@@ -10,6 +11,7 @@ from Panels.RightPanel import RightPanel
 from Panels.BSDLRepo import BSDLRepo
 from Panels.BottomPanel import BottomPanel
 from Panels.DefineDevice import DefineDevice
+from Panels.Dialogs import Legend, About
 
 from HWLayer.JTAG import JTAG
 from HWLayer.dut import DUT
@@ -106,7 +108,16 @@ class Mywin(panels.MainFrame):
     self.bsdl_repo.setSetting('cable.name', self.m_cable.GetString(cid))
     self.bsdl_repo.setSetting('cable.params', self.m_cable_params.GetValue())
     self.log("Cable %s saved as default." % self.m_cable.GetString(cid))
-    
+
+  #----------------------------------------------------------------------
+  def displayLegend(self, event):
+    dlg = Legend(self)
+    dlg.Show(True)
+
+  #----------------------------------------------------------------------
+  def displayAbout(self, event):
+    wx.adv.AboutBox(About.info)
+        
   #----------------------------------------------------------------------
   def editBSDLrepo(self, event):
     dlg = BSDLRepo(self)

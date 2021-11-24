@@ -73,6 +73,15 @@ class MainFrame ( wx.Frame ):
 
         self.m_menubar1.Append( self.m_menu3, u"Tools" )
 
+        self.m_menu4 = wx.Menu()
+        self.m_mitem_legend = wx.MenuItem( self.m_menu4, wx.ID_ANY, u"Legend"+ u"\t" + u"CTRL+l", u"Display legend colours", wx.ITEM_NORMAL )
+        self.m_menu4.Append( self.m_mitem_legend )
+
+        self.m_mitem_about = wx.MenuItem( self.m_menu4, wx.ID_ANY, u"About", u"Display about dialogue", wx.ITEM_NORMAL )
+        self.m_menu4.Append( self.m_mitem_about )
+
+        self.m_menubar1.Append( self.m_menu4, u"Help" )
+
         self.SetMenuBar( self.m_menubar1 )
 
         self.m_toolbar1 = self.CreateToolBar( wx.TB_HORIZONTAL, wx.ID_ANY )
@@ -117,6 +126,8 @@ class MainFrame ( wx.Frame ):
         self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_8.GetId() )
         self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_off.GetId() )
         self.Bind( wx.EVT_MENU, self.editBSDLrepo, id = self.m_bsld_repo.GetId() )
+        self.Bind( wx.EVT_MENU, self.displayLegend, id = self.m_mitem_legend.GetId() )
+        self.Bind( wx.EVT_MENU, self.displayAbout, id = self.m_mitem_about.GetId() )
         self.Bind( wx.EVT_TOOL, self.loadFile, id = self.m_t_open.GetId() )
         self.Bind( wx.EVT_TOOL, self.dropChain, id = self.m_chain_stop.GetId() )
         self.Bind( wx.EVT_TOOL, self.attachChain, id = self.m_chain_start.GetId() )
@@ -148,6 +159,12 @@ class MainFrame ( wx.Frame ):
 
 
     def editBSDLrepo( self, event ):
+        event.Skip()
+
+    def displayLegend( self, event ):
+        event.Skip()
+
+    def displayAbout( self, event ):
         event.Skip()
 
 
@@ -316,6 +333,77 @@ class BSDLRepo ( wx.Dialog ):
         event.Skip()
 
     def dropBSDL( self, event ):
+        event.Skip()
+
+
+###########################################################################
+## Class Legend
+###########################################################################
+
+class Legend ( wx.Dialog ):
+
+    def __init__( self, parent ):
+        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Pin Legend", pos = wx.DefaultPosition, size = wx.Size( 322,406 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.DEFAULT_DIALOG_STYLE )
+
+        self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+
+        bSizer11 = wx.BoxSizer( wx.VERTICAL )
+
+        self.m_panel1 = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+        bSizer11.Add( self.m_panel1, 1, wx.EXPAND |wx.ALL, 5 )
+
+        self.m_button6 = wx.Button( self, wx.ID_ANY, u"Close", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer11.Add( self.m_button6, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+
+
+        self.SetSizer( bSizer11 )
+        self.Layout()
+
+        self.Centre( wx.BOTH )
+
+        # Connect Events
+        self.m_button6.Bind( wx.EVT_BUTTON, self.close )
+
+    def __del__( self ):
+        pass
+
+
+    # Virtual event handlers, overide them in your derived class
+    def close( self, event ):
+        event.Skip()
+
+
+###########################################################################
+## Class About
+###########################################################################
+
+class About ( wx.Dialog ):
+
+    def __init__( self, parent ):
+        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"About", pos = wx.DefaultPosition, size = wx.Size( 334,291 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.DEFAULT_DIALOG_STYLE )
+
+        self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+
+        bSizer12 = wx.BoxSizer( wx.VERTICAL )
+
+        self.m_button7 = wx.Button( self, wx.ID_ANY, u"OK", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer12.Add( self.m_button7, 0, wx.ALIGN_BOTTOM|wx.ALIGN_CENTER|wx.BOTTOM|wx.TOP, 5 )
+
+
+        self.SetSizer( bSizer12 )
+        self.Layout()
+
+        self.Centre( wx.BOTH )
+
+        # Connect Events
+        self.m_button7.Bind( wx.EVT_BUTTON, self.close )
+
+    def __del__( self ):
+        pass
+
+
+    # Virtual event handlers, overide them in your derived class
+    def close( self, event ):
         event.Skip()
 
 
