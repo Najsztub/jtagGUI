@@ -170,7 +170,7 @@ class MainFrame ( wx.Frame ):
 
 class LeftPanel ( wx.Panel ):
 
-    def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 280,603 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
+    def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 280,-1 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
         wx.Panel.__init__ ( self, parent, id = id, pos = pos, size = size, style = style, name = name )
 
         self.SetMinSize( wx.Size( 150,-1 ) )
@@ -192,17 +192,19 @@ class LeftPanel ( wx.Panel ):
         bSizer4 = wx.BoxSizer( wx.VERTICAL )
 
         self.m_chain = wx.dataview.TreeListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.dataview.TL_DEFAULT_STYLE|wx.dataview.TL_MULTIPLE )
-        self.m_chain.AppendColumn( u"Properties", wx.COL_WIDTH_AUTOSIZE, wx.ALIGN_LEFT, wx.COL_RESIZABLE|wx.COL_SORTABLE )
-        self.m_chain.AppendColumn( u"*", wx.COL_WIDTH_AUTOSIZE, wx.ALIGN_LEFT, 0 )
-        self.m_chain.AppendColumn( u"Values", wx.COL_WIDTH_AUTOSIZE, wx.ALIGN_LEFT, wx.COL_RESIZABLE )
+        self.m_chain.SetMinSize( wx.Size( 80,-1 ) )
 
-        bSizer4.Add( self.m_chain, 1, wx.ALL|wx.EXPAND|wx.FIXED_MINSIZE, 5 )
+        self.m_chain.AppendColumn( u"Properties", size[0] / 2, wx.ALIGN_LEFT, wx.COL_RESIZABLE )
+        self.m_chain.AppendColumn( u"*", 24, wx.ALIGN_LEFT, 0 )
+        self.m_chain.AppendColumn( u"Values", wx.COL_WIDTH_DEFAULT, wx.ALIGN_LEFT, wx.COL_RESIZABLE )
+
+        bSizer4.Add( self.m_chain, 1, wx.ALL|wx.EXPAND, 5 )
 
         self.m_pinList = wx.ListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
         bSizer4.Add( self.m_pinList, 1, wx.EXPAND|wx.ALL, 5 )
 
 
-        bSizer2.Add( bSizer4, 1, wx.EXPAND|wx.FIXED_MINSIZE, 5 )
+        bSizer2.Add( bSizer4, 1, wx.EXPAND, 5 )
 
 
         self.SetSizer( bSizer2 )
