@@ -44,5 +44,4 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>."""
   info.SetCopyright('(C) 2020-2021 Mateusz Najsztub')
   info.SetWebSite('https://github.com/Najsztub/jtagGUI')
   info.SetLicence(licence)
-  info.AddDeveloper('Mateusz Najsztub')
 

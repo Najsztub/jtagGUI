@@ -374,40 +374,6 @@ class Legend ( wx.Dialog ):
 
 
 ###########################################################################
-## Class About
-###########################################################################
-
-class About ( wx.Dialog ):
-
-    def __init__( self, parent ):
-        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"About", pos = wx.DefaultPosition, size = wx.Size( 334,291 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.DEFAULT_DIALOG_STYLE )
-
-        self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
-
-        bSizer12 = wx.BoxSizer( wx.VERTICAL )
-
-        self.m_button7 = wx.Button( self, wx.ID_ANY, u"OK", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer12.Add( self.m_button7, 0, wx.ALIGN_BOTTOM|wx.ALIGN_CENTER|wx.BOTTOM|wx.TOP, 5 )
-
-
-        self.SetSizer( bSizer12 )
-        self.Layout()
-
-        self.Centre( wx.BOTH )
-
-        # Connect Events
-        self.m_button7.Bind( wx.EVT_BUTTON, self.close )
-
-    def __del__( self ):
-        pass
-
-
-    # Virtual event handlers, overide them in your derived class
-    def close( self, event ):
-        event.Skip()
-
-
-###########################################################################
 ## Class DefineDevice
 ###########################################################################
 
