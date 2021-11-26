@@ -106,6 +106,8 @@ class BSDLtank:
     for row_id in range(len(bsdl)):
       bsdl[row_id] = list(bsdl[row_id])
       bsdl[row_id][5] = (bsdl[row_id][5] == 1)
+      # Fix datetime
+      bsdl[row_id][2] = bsdl[row_id][2].split('.', 1)[0]
     return bsdl
 
   def getCodes(self, idcode):
