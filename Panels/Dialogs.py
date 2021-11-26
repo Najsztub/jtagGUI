@@ -1,19 +1,8 @@
 import wx
 import wx.adv
 from Panels import panels
-from HWLayer.dut import Pin, Cell
-
-PIN_COLS = {
-  'vcc': wx.Colour(255,0,0),
-  'gnd': wx.Colour(10,10,10),
-  'io' : wx.Colour(240,240,240),
-  'jtag' : wx.Colour(255, 204, 102),
-  'oth' : wx.Colour(150,150,220),
-  'nc' : wx.Colour(255, 255, 255),
-  'io_1': wx.Colour(200,0 , 0),
-  'io_0': wx.Colour(255,255,255),
-  'io_z': wx.Colour(128, 128, 128)
-}
+from HWLayer.dut import Pin, Cell, PinColour
+from enum import Enum
 
 #######################################################################
 # Legend dialog
@@ -97,19 +86,19 @@ class Legend(panels.Legend):
     self.Destroy()
 
   def addPin(self, dc, pin_desc, y_coord):
-    pin_color = PIN_COLS['oth']
+    pin_color = PinColour.OTH
 
     left_pad = 5
 
     pin = pin_desc[0]
     
-    if pin.port.name[0:3].upper() in ['VCC', 'VDD']: pin_color = PIN_COLS['vcc']
-    elif pin.port.name[0:3].upper() in ['GND', 'VSS']:  pin_color = PIN_COLS['gnd']
-    elif pin.port.name[0:2].upper() == 'IO':  pin_color = PIN_COLS['io']
-    elif pin.port.name.upper() == 'MISSING':  pin_color = PIN_COLS['nc']
-    elif pin.port.name[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = PIN_COLS['jtag']
+    if pin.port.name[0:3].upper() in ['VCC', 'VDD']: pin_color = PinColour.VCC
+    elif pin.port.name[0:3].upper() in ['GND', 'VSS']:  pin_color = PinColour.GND
+    elif pin.port.name[0:2].upper() == 'IO':  pin_color = PinColour.IO
+    elif pin.port.name.upper() == 'MISSING':  pin_color = PinColour.NC
+    elif pin.port.name[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = PinColour.JTAG
     dc.SetPen(wx.Pen(wx.Colour(200,200,255), 2)) 
-    dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
+    dc.SetBrush(wx.Brush(pin_color.value, wx.BRUSHSTYLE_SOLID))
 
     # Plot pin square
     dc.DrawRectangle(left_pad, y_coord, self.width, self.width) 
@@ -117,9 +106,9 @@ class Legend(panels.Legend):
     # Draw value to write if pin setting is enabled
     if pin.port.is_set:
       if pin.write == '0': 
-        dc.SetBrush(wx.Brush(PIN_COLS['io_0'], wx.BRUSHSTYLE_SOLID))
+        dc.SetBrush(wx.Brush(PinColour.IO_0.value, wx.BRUSHSTYLE_SOLID))
       elif pin.write == '1': 
-        dc.SetBrush(wx.Brush(PIN_COLS['io_1'], wx.BRUSHSTYLE_SOLID))
+        dc.SetBrush(wx.Brush(PinColour.IO_1.value, wx.BRUSHSTYLE_SOLID))
       dc.DrawPolygon([
         (left_pad, y_coord),
         (left_pad + self.width, y_coord + self.width),
@@ -128,12 +117,12 @@ class Legend(panels.Legend):
 
     # Draw state if value present, else return
     if pin.read is not None: 
-      state_col = PIN_COLS['io_z']
-      if pin.read == '0': state_col = PIN_COLS['io_0']
-      elif pin.read == '1': state_col = PIN_COLS['io_1']
+      state_col = PinColour.IO_Z
+      if pin.read == '0': state_col = PinColour.IO_0
+      elif pin.read == '1': state_col = PinColour.IO_1
         
       # Draw circle 
-      dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
+      dc.SetBrush(wx.Brush(state_col.value, wx.BRUSHSTYLE_SOLID))
 
       # Include pin type in the picture
       if pin.port.type in ['out']:
@@ -145,7 +134,6 @@ class Legend(panels.Legend):
     font = wx.Font(self.width, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
     dc.DrawText(pin_desc[1], left_pad + 10 + self.width, y_coord + 0.25*self.width)
 
-
   def OnPaint(self, e): 
     dc =  wx.PaintDC(e.GetEventObject())
     brush = wx.Brush("white")  
@@ -155,10 +143,6 @@ class Legend(panels.Legend):
     # Loop over pin list
     for i, p in enumerate(self.pin_list):
       self.addPin(dc, p, i * self.width + 0.25 * self.width)
-
-    
-    
-
 
 #######################################################################
 # About dialog

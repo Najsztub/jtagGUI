@@ -40,18 +40,6 @@ class Mywin(panels.MainFrame):
     # Add BSDL Repo
     self.bsdl_repo = BSDLtank('bsdl/bsdl_repo.sqlite')
 
-    self.PIN_COLS = {
-      'vcc': wx.Colour(255,0,0),
-      'gnd': wx.Colour(10,10,10),
-      'io' : wx.Colour(240,240,240),
-      'jtag' : wx.Colour(255, 204, 102),
-      'oth' : wx.Colour(150,150,220),
-      'nc' : wx.Colour(255, 255, 255),
-      'io_1': wx.Colour(200,0 , 0),
-      'io_0': wx.Colour(255,255,255),
-      'io_z': wx.Colour(128, 128, 128)
-    }
-
     # Split panels
     splitMain = wx.SplitterWindow(self)
     splitV = wx.SplitterWindow(splitMain)
@@ -65,7 +53,6 @@ class Mywin(panels.MainFrame):
     self.leftP.rightP = self.rightP
 
     # Add pointer to right panel
-    self.rightP.mainW = self
     self.rightP.rightP = self.leftP
 
     # split the top window

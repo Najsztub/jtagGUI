@@ -2,7 +2,7 @@ import wx
 import re
 import math
 import string
-from HWLayer.dut import Pin
+from HWLayer.dut import Pin, PinColour
 
 #######################################################################
 # Define Right panel class
@@ -14,8 +14,7 @@ class RightPanel(wx.Panel):
     
     self.dev = None
     self.leftP = None
-    self.mainW = None
-
+    
     self.npins =  None
     self.package = None
 
@@ -107,15 +106,15 @@ class RightPanel(wx.Panel):
 
   def plotPin(self, dc, pin, pt, width):
     # Set fill colour depending on Pin name
-    pin_color = self.mainW.PIN_COLS['oth']
+    pin_color = PinColour.OTH
     port_name = pin.port.name
-    if port_name[0:3].upper() in ['VCC', 'VDD']: pin_color = self.mainW.PIN_COLS['vcc']
-    elif port_name[0:3].upper() in ['GND', 'VSS']:  pin_color = self.mainW.PIN_COLS['gnd']
-    elif port_name[0:2].upper() == 'IO':  pin_color = self.mainW.PIN_COLS['io']
-    elif port_name.upper() == 'MISSING':  pin_color = self.mainW.PIN_COLS['nc']
-    elif port_name[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = self.mainW.PIN_COLS['jtag']
+    if port_name[0:3].upper() in ['VCC', 'VDD']: pin_color = PinColour.VCC
+    elif port_name[0:3].upper() in ['GND', 'VSS']:  pin_color = PinColour.GND
+    elif port_name[0:2].upper() == 'IO':  pin_color = PinColour.IO
+    elif port_name.upper() == 'MISSING':  pin_color = PinColour.NC
+    elif port_name[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = PinColour.JTAG
     dc.SetPen(wx.Pen(wx.Colour(200,200,255))) 
-    dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
+    dc.SetBrush(wx.Brush(pin_color.value, wx.BRUSHSTYLE_SOLID))
 
     # Plot pin square
     dc.DrawRectangle(pt[0], pt[1], width, width) 
@@ -123,9 +122,9 @@ class RightPanel(wx.Panel):
     # Draw value to write if pin setting is enabled
     if pin.port.is_set:
       if pin.write == '0': 
-        dc.SetBrush(wx.Brush(self.mainW.PIN_COLS['io_0'], wx.BRUSHSTYLE_SOLID))
+        dc.SetBrush(wx.Brush(PinColour.IO_0.value, wx.BRUSHSTYLE_SOLID))
       elif pin.write == '1': 
-        dc.SetBrush(wx.Brush(self.mainW.PIN_COLS['io_1'], wx.BRUSHSTYLE_SOLID))
+        dc.SetBrush(wx.Brush(PinColour.IO_1.value, wx.BRUSHSTYLE_SOLID))
       dc.DrawPolygon([
         (pt[0], pt[1]),
         (pt[0] + width, pt[1] + width),
@@ -134,12 +133,12 @@ class RightPanel(wx.Panel):
 
     # Draw state if value present, else return
     if pin.read is None: return
-    state_col = self.mainW.PIN_COLS['io_z']
-    if pin.read == '0': state_col = self.mainW.PIN_COLS['io_0']
-    elif pin.read == '1': state_col = self.mainW.PIN_COLS['io_1']
+    state_col = PinColour.IO_Z
+    if pin.read == '0': state_col = PinColour.IO_0
+    elif pin.read == '1': state_col = PinColour.IO_1
       
     # Draw circle 
-    dc.SetBrush(wx.Brush(state_col, wx.BRUSHSTYLE_SOLID))
+    dc.SetBrush(wx.Brush(state_col.value, wx.BRUSHSTYLE_SOLID))
 
     # Include pin type in the picture
     if pin.port.type in ['out']:

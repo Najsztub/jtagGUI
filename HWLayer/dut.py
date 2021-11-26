@@ -1,5 +1,20 @@
 # Device Under Test Class
+from enum import Enum
+import wx
 
+# Pin colours
+class PinColour(Enum):
+  VCC   = wx.Colour(255,0,0)
+  GND   = wx.Colour(10,10,10)
+  IO    = wx.Colour(240,240,240)
+  JTAG  = wx.Colour(255, 204, 102)
+  OTH   = wx.Colour(150,150,220)
+  NC    = wx.Colour(255, 255, 255)
+  IO_1  = wx.Colour(200,0 , 0)
+  IO_0  = wx.Colour(255,255,255)
+  IO_Z  = wx.Colour(128, 128, 128)
+
+# General Logic class to inherit from
 class Logic:
   """ Base BSDL logic class with AST property """
   def __init__(self, ast=None):
