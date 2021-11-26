@@ -18,7 +18,6 @@ from HWLayer.dut import DUT
 
 from HWLayer.conf_tank import BSDLtank, CABLES_DICT
 
-
 #######################################################################
 # Main window class
 class Mywin(panels.MainFrame): 

@@ -21,7 +21,7 @@ class RightPanel(wx.Panel):
 
     self.EMPTY_PIN = Pin()
     self.EMPTY_PIN.name = 'MISSING'
-    self.EMPTY_PIN.port.type= 'NC'
+    self.EMPTY_PIN.port.name = 'MISSING'
   
     # Painting + repainting on resize
     self.Bind(wx.EVT_SIZE, self.OnSize)
