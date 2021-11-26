@@ -14,7 +14,7 @@ class RightPanel(wx.Panel):
     
     self.dev = None
     self.leftP = None
-    
+
     self.npins =  None
     self.package = None
 
