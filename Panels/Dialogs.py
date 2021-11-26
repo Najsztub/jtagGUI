@@ -99,6 +99,8 @@ class Legend(panels.Legend):
   def addPin(self, dc, pin_desc, y_coord):
     pin_color = PIN_COLS['oth']
 
+    left_pad = 5
+
     pin = pin_desc[0]
     
     if pin.port.name[0:3].upper() in ['VCC', 'VDD']: pin_color = PIN_COLS['vcc']
@@ -110,7 +112,7 @@ class Legend(panels.Legend):
     dc.SetBrush(wx.Brush(pin_color, wx.BRUSHSTYLE_SOLID))
 
     # Plot pin square
-    dc.DrawRectangle(0, y_coord, self.width, self.width) 
+    dc.DrawRectangle(left_pad, y_coord, self.width, self.width) 
 
     # Draw value to write if pin setting is enabled
     if pin.port.is_set:
@@ -119,9 +121,9 @@ class Legend(panels.Legend):
       elif pin.write == '1': 
         dc.SetBrush(wx.Brush(PIN_COLS['io_1'], wx.BRUSHSTYLE_SOLID))
       dc.DrawPolygon([
-        (0, y_coord),
-        (0 + self.width, y_coord + self.width),
-        (0 + self.width, y_coord)
+        (left_pad, y_coord),
+        (left_pad + self.width, y_coord + self.width),
+        (left_pad + self.width, y_coord)
       ])
 
     # Draw state if value present, else return
@@ -136,16 +138,18 @@ class Legend(panels.Legend):
       # Include pin type in the picture
       if pin.port.type in ['out']:
         dc.SetPen(wx.Pen(wx.Colour(26, 33, 171), 1, wx.SOLID))
-      dc.DrawCircle((0.5 * self.width), (y_coord+0.5 * self.width), (0.3 * self.width))    
+      dc.DrawCircle((left_pad+0.5 * self.width), (y_coord+0.5 * self.width), (0.3 * self.width))    
       dc.SetPen(wx.Pen(wx.Colour(200,200,255))) 
       dc.SetBrush(wx.Brush(wx.Colour(0,255,0), wx.TRANSPARENT)) 
 
     font = wx.Font(self.width, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
-    dc.DrawText(pin_desc[1], 10 + self.width, y_coord + 0.25*self.width)
+    dc.DrawText(pin_desc[1], left_pad + 10 + self.width, y_coord + 0.25*self.width)
 
 
   def OnPaint(self, e): 
     dc =  wx.PaintDC(e.GetEventObject())
+    brush = wx.Brush("white")  
+    dc.SetBackground(brush) 
     dc.Clear() 
 
     # Loop over pin list
