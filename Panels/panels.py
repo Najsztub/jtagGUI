@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Oct 26 2018)
+## Python code generated with wxFormBuilder (version 3.10.1-0-g8feb16b3)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO *NOT* EDIT THIS FILE!
@@ -11,6 +11,7 @@ import wx
 import wx.xrc
 import wx.dataview
 import wx.aui
+import wx.stc
 
 ###########################################################################
 ## Class MainFrame
@@ -71,6 +72,10 @@ class MainFrame ( wx.Frame ):
         self.m_bsld_repo = wx.MenuItem( self.m_menu3, wx.ID_ANY, u"BSDL repository", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menu3.Append( self.m_bsld_repo )
 
+        self.m_editor = wx.MenuItem( self.m_menu3, wx.ID_ANY, u"BSDL file editor", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menu3.Append( self.m_editor )
+        self.m_editor.Enable( False )
+
         self.m_menubar1.Append( self.m_menu3, u"Tools" )
 
         self.m_menu4 = wx.Menu()
@@ -126,6 +131,7 @@ class MainFrame ( wx.Frame ):
         self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_8.GetId() )
         self.Bind( wx.EVT_MENU, self.dr_timer_chng, id = self.m_mauto_off.GetId() )
         self.Bind( wx.EVT_MENU, self.editBSDLrepo, id = self.m_bsld_repo.GetId() )
+        self.Bind( wx.EVT_MENU, self.showEditor, id = self.m_editor.GetId() )
         self.Bind( wx.EVT_MENU, self.displayLegend, id = self.m_mitem_legend.GetId() )
         self.Bind( wx.EVT_MENU, self.displayAbout, id = self.m_mitem_about.GetId() )
         self.Bind( wx.EVT_TOOL, self.loadFile, id = self.m_t_open.GetId() )
@@ -138,7 +144,7 @@ class MainFrame ( wx.Frame ):
         pass
 
 
-    # Virtual event handlers, overide them in your derived class
+    # Virtual event handlers, override them in your derived class
     def loadFile( self, event ):
         event.Skip()
 
@@ -159,6 +165,9 @@ class MainFrame ( wx.Frame ):
 
 
     def editBSDLrepo( self, event ):
+        event.Skip()
+
+    def showEditor( self, event ):
         event.Skip()
 
     def displayLegend( self, event ):
@@ -238,7 +247,7 @@ class LeftPanel ( wx.Panel ):
         pass
 
 
-    # Virtual event handlers, overide them in your derived class
+    # Virtual event handlers, override them in your derived class
     def shiftIR( self, event ):
         event.Skip()
 
@@ -323,16 +332,20 @@ class BSDLRepo ( wx.Dialog ):
         # Connect Events
         self.Bind( wx.EVT_TOOL, self.addBSDL, id = self.m_bsdl_add.GetId() )
         self.Bind( wx.EVT_TOOL, self.dropBSDL, id = self.m_bsdl_drop.GetId() )
+        self.Bind( wx.EVT_TOOL, self.exportDb, id = self.m_backup.GetId() )
 
     def __del__( self ):
         pass
 
 
-    # Virtual event handlers, overide them in your derived class
+    # Virtual event handlers, override them in your derived class
     def addBSDL( self, event ):
         event.Skip()
 
     def dropBSDL( self, event ):
+        event.Skip()
+
+    def exportDb( self, event ):
         event.Skip()
 
 
@@ -368,7 +381,7 @@ class Legend ( wx.Dialog ):
         pass
 
 
-    # Virtual event handlers, overide them in your derived class
+    # Virtual event handlers, override them in your derived class
     def close( self, event ):
         event.Skip()
 
@@ -404,8 +417,8 @@ class DefineDevice ( wx.Dialog ):
         bSizer10.Add( self.m_toolBar3, 0, wx.EXPAND|wx.LEFT, 5 )
 
         self.m_reg_list = wx.dataview.DataViewListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.dataview.DV_HORIZ_RULES )
-        self.m_r_name = self.m_reg_list.AppendTextColumn( u"Register name", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
-        self.m_r_len = self.m_reg_list.AppendTextColumn( u"Register length", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_r_name = self.m_reg_list.AppendTextColumn( u"Register name", wx.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_r_len = self.m_reg_list.AppendTextColumn( u"Register length", wx.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
         bSizer10.Add( self.m_reg_list, 1, wx.ALL|wx.EXPAND, 5 )
 
 
@@ -427,9 +440,9 @@ class DefineDevice ( wx.Dialog ):
         bSizer11.Add( self.m_toolBar4, 0, wx.EXPAND|wx.LEFT, 5 )
 
         self.m_inst_list = wx.dataview.DataViewListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_i_name = self.m_inst_list.AppendTextColumn( u"Instruction name", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
-        self.m_i_opcode = self.m_inst_list.AppendTextColumn( u"Opcode", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
-        self.m_i_reg = self.m_inst_list.AppendTextColumn( u"Reg", wx.dataview.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_i_name = self.m_inst_list.AppendTextColumn( u"Instruction name", wx.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_i_opcode = self.m_inst_list.AppendTextColumn( u"Opcode", wx.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.m_i_reg = self.m_inst_list.AppendTextColumn( u"Reg", wx.DATAVIEW_CELL_EDITABLE, -1, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
         bSizer11.Add( self.m_inst_list, 1, wx.ALL|wx.EXPAND, 5 )
 
 
@@ -474,7 +487,7 @@ class DefineDevice ( wx.Dialog ):
         pass
 
 
-    # Virtual event handlers, overide them in your derived class
+    # Virtual event handlers, override them in your derived class
     def regAdd( self, event ):
         event.Skip()
 
@@ -515,6 +528,12 @@ class BSDLEditor ( wx.Frame ):
         self.m_mgr.SetFlags(wx.aui.AUI_MGR_DEFAULT)
 
         self.m_menubar2 = wx.MenuBar( 0 )
+        self.me_file = wx.Menu()
+        self.me_open = wx.MenuItem( self.me_file, wx.ID_ANY, u"Open", wx.EmptyString, wx.ITEM_NORMAL )
+        self.me_file.Append( self.me_open )
+
+        self.m_menubar2.Append( self.me_file, u"File" )
+
         self.SetMenuBar( self.m_menubar2 )
 
         self.m_statusBar2 = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
@@ -522,9 +541,43 @@ class BSDLEditor ( wx.Frame ):
         self.m_mgr.AddPane( self.m_auinotebook2, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
 
 
-        # WARNING: wxPython code generation isn't supported for this widget yet.
-        self.m_scintilla1 = wx.Window( self )
-        self.m_mgr.AddPane( self.m_scintilla1, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
+        self.me_editor = wx.stc.StyledTextCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
+        self.me_editor.SetUseTabs ( True )
+        self.me_editor.SetTabWidth ( 4 )
+        self.me_editor.SetIndent ( 4 )
+        self.me_editor.SetTabIndents( True )
+        self.me_editor.SetBackSpaceUnIndents( True )
+        self.me_editor.SetViewEOL( False )
+        self.me_editor.SetViewWhiteSpace( False )
+        self.me_editor.SetMarginWidth( 2, 0 )
+        self.me_editor.SetIndentationGuides( True )
+        self.me_editor.SetReadOnly( False );
+        self.me_editor.SetMarginType ( 1, wx.stc.STC_MARGIN_SYMBOL )
+        self.me_editor.SetMarginMask ( 1, wx.stc.STC_MASK_FOLDERS )
+        self.me_editor.SetMarginWidth ( 1, 16)
+        self.me_editor.SetMarginSensitive( 1, True )
+        self.me_editor.SetProperty ( "fold", "1" )
+        self.me_editor.SetFoldFlags ( wx.stc.STC_FOLDFLAG_LINEBEFORE_CONTRACTED | wx.stc.STC_FOLDFLAG_LINEAFTER_CONTRACTED );
+        self.me_editor.SetMarginType( 0, wx.stc.STC_MARGIN_NUMBER );
+        self.me_editor.SetMarginWidth( 0, self.me_editor.TextWidth( wx.stc.STC_STYLE_LINENUMBER, "_99999" ) )
+        self.me_editor.MarkerDefine( wx.stc.STC_MARKNUM_FOLDER, wx.stc.STC_MARK_BOXPLUS )
+        self.me_editor.MarkerSetBackground( wx.stc.STC_MARKNUM_FOLDER, wx.BLACK)
+        self.me_editor.MarkerSetForeground( wx.stc.STC_MARKNUM_FOLDER, wx.WHITE)
+        self.me_editor.MarkerDefine( wx.stc.STC_MARKNUM_FOLDEROPEN, wx.stc.STC_MARK_BOXMINUS )
+        self.me_editor.MarkerSetBackground( wx.stc.STC_MARKNUM_FOLDEROPEN, wx.BLACK )
+        self.me_editor.MarkerSetForeground( wx.stc.STC_MARKNUM_FOLDEROPEN, wx.WHITE )
+        self.me_editor.MarkerDefine( wx.stc.STC_MARKNUM_FOLDERSUB, wx.stc.STC_MARK_EMPTY )
+        self.me_editor.MarkerDefine( wx.stc.STC_MARKNUM_FOLDEREND, wx.stc.STC_MARK_BOXPLUS )
+        self.me_editor.MarkerSetBackground( wx.stc.STC_MARKNUM_FOLDEREND, wx.BLACK )
+        self.me_editor.MarkerSetForeground( wx.stc.STC_MARKNUM_FOLDEREND, wx.WHITE )
+        self.me_editor.MarkerDefine( wx.stc.STC_MARKNUM_FOLDEROPENMID, wx.stc.STC_MARK_BOXMINUS )
+        self.me_editor.MarkerSetBackground( wx.stc.STC_MARKNUM_FOLDEROPENMID, wx.BLACK)
+        self.me_editor.MarkerSetForeground( wx.stc.STC_MARKNUM_FOLDEROPENMID, wx.WHITE)
+        self.me_editor.MarkerDefine( wx.stc.STC_MARKNUM_FOLDERMIDTAIL, wx.stc.STC_MARK_EMPTY )
+        self.me_editor.MarkerDefine( wx.stc.STC_MARKNUM_FOLDERTAIL, wx.stc.STC_MARK_EMPTY )
+        self.me_editor.SetSelBackground( True, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT ) )
+        self.me_editor.SetSelForeground( True, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT ) )
+        self.m_mgr.AddPane( self.me_editor, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
 
         self.m_listbook1 = wx.Listbook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LB_DEFAULT )
         self.m_mgr.AddPane( self.m_listbook1, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
@@ -534,8 +587,16 @@ class BSDLEditor ( wx.Frame ):
         self.m_mgr.Update()
         self.Centre( wx.BOTH )
 
+        # Connect Events
+        self.Bind( wx.EVT_MENU, self.loadFile, id = self.me_open.GetId() )
+
     def __del__( self ):
         self.m_mgr.UnInit()
 
+
+
+    # Virtual event handlers, override them in your derived class
+    def loadFile( self, event ):
+        event.Skip()
 
 

@@ -9,6 +9,7 @@ import Panels.panels as panels
 from Panels.LeftPanel import LeftPanel
 from Panels.RightPanel import RightPanel
 from Panels.BSDLRepo import BSDLRepo
+from Panels.BSDLEditor import BSDLEditor
 from Panels.BottomPanel import BottomPanel
 from Panels.DefineDevice import DefineDevice
 from Panels.Dialogs import Legend, About
@@ -318,6 +319,10 @@ class Mywin(panels.MainFrame):
       self.dr_auto_timer = wx.CallLater(self.dr_auto, self.dr_timer)
     else:
       self.dr_auto_timer.Start(self.dr_auto)
+
+  def showEditor(self, event):
+    dlg = BSDLEditor(self)
+    dlg.Show(True)
 
   def OnExit(self, evt):
     self.Close(True)  

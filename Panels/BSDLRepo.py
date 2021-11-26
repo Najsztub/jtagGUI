@@ -18,7 +18,7 @@ class BSDLRepo(panels.BSDLRepo):
       self.m_bsdl_data.AppendItem(row[1:6])
 
   def addBSDL( self, event=None):
-       # BSDL file loading dialog
+    # BSDL file loading dialog
     openFileDialog = wx.FileDialog(self, "Open", "", "", 
                                     "BSDL files (*.bsdl, *.bsd)|*.bsdl;*.bsd|All files (*.*)|*.*", 
                                     wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
@@ -60,3 +60,6 @@ class BSDLRepo(panels.BSDLRepo):
       self.bsdl_repo.delBSDL(self.data[row][0])
     self.m_bsdl_data.DeleteItem(row)
     del self.data[row]
+
+  def exportDb(self, event):
+    event.Skip()
