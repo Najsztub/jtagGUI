@@ -158,8 +158,15 @@ class RightPanel(wx.Panel):
     else:
       font = wx.Font(math.floor(rec_b*0.33), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
     dc.SetFont(font) 
+    # Draw pins in loop 
     for i in range(self.npins):
-      loc_dir = pt_dir[math.floor(i / side)]
+      # Decide which border it is
+      # 1 - bottom
+      # 2 - right
+      # 3 - top
+      # 0 - left
+      border_number = math.floor(i / side)
+      loc_dir = pt_dir[border_number]
       # Search for item based on on pin nr
       try:
         it = self.dev.pins[str(i+1)]
@@ -167,18 +174,18 @@ class RightPanel(wx.Panel):
         it = self.EMPTY_PIN
       # Draw rectangles for pins
       # Move pins 1 unit, so they do not overlap in corners
-      if ( math.floor(i / side) == 2):
-        # Right
-        pt = [(coord[0] + rec_b), (coord[1] - rec_b)]
-        dc.DrawText(str(i+1), pt[0] + rec_b, (pt[1]))
-      elif (math.floor(i / side) == 1):
+      if (border_number == 1):
         # Bottom
         pt = [(coord[0] + rec_b), (coord[1])]
         dc.DrawText(str(i+1), pt[0], (pt[1]+rec_b))
-      elif (math.floor(i / side) == 3):
+      elif (border_number == 2):
+        # Right
+        pt = [(coord[0] + rec_b), (coord[1] - rec_b)]
+        dc.DrawText(str(i+1), pt[0] + rec_b, (pt[1]))
+      elif (border_number == 3):
         # Top
         pt = [(coord[0]), (coord[1] - rec_b)]
-        dc.DrawText(str(i+1), pt[0], (pt[1]- rec_b))
+        dc.DrawText(str(i+1), pt[0], (pt[1] - rec_b))
       else:
         # Left
         pt = [(coord[0]), (coord[1])]
