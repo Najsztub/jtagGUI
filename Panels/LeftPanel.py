@@ -26,17 +26,12 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.ch_root = self.m_chain.GetRootItem() # self.m_chain.InsertItem(self.m_chain.GetRootItem(), wx.dataview.TLI_FIRST, "JTAG chain")
 
     # Allow for column sorting
-    listmix.ColumnSorterMixin.__init__(self, 3)
-    self.Bind(wx.EVT_LIST_COL_CLICK, self.OnColClick, self.m_pinList)
+    listmix.ColumnSorterMixin.__init__(self, 4)
 
   #----------------------------------------------------------------------
   # Used by the ColumnSorterMixin, see wx/lib/mixins/listctrl.py
   def GetListCtrl(self):
     return self.m_pinList
-
-  #----------------------------------------------------------------------
-  def OnColClick(self, event):
-    event.Skip()
 
   def dropDevs(self):
     # Drop dev panel devices
