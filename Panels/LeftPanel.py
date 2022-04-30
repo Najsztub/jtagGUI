@@ -6,8 +6,8 @@ from Panels import panels, PinSetup
 # Override wxFormBuilder LeftPanel class
 class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
   #constructor
-  def __init__(self,parent):
-    #initialize parent class
+  def __init__(self, parent):
+    # Initialize parent class
     panels.LeftPanel.__init__(self, parent)
 
     # Containers for devices
@@ -143,7 +143,12 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
       self.m_pinList.SetItem(index, 2, pin_type)
       self.m_pinList.SetItem(index, 3, set_val)
       self.m_pinList.SetItemData(index, index)
-      self.itemDataMap.append([key, dut_pin.port.name, pin_type, set_val])
+      # Convert str number to int for proper pin sorting
+      pin_key = key
+      if pin_key.isnumeric():
+        pin_key = int(pin_key)
+      # TODO: Convert BGA pins for sorting
+      self.itemDataMap.append([pin_key, dut_pin.port.name, pin_type, set_val])
       index += 1
     
   def shiftIR(self, event):
@@ -153,7 +158,6 @@ class LeftPanel(panels.LeftPanel, listmix.ColumnSorterMixin):
     self.mainW.shiftDR(event)
 
   def pinListRight(self, event):
-    # TODO: Allow for multiple pin selection and setting
     # Pin right click
     dev = self.mainW.chain[self.active_dev]
     list_item_row = event.GetIndex()
