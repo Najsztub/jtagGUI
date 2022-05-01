@@ -4,15 +4,17 @@ import wx
 
 # Pin colours
 class PinColour(Enum):
-  VCC   = wx.Colour(255,0,0)
-  GND   = wx.Colour(10,10,10)
-  IO    = wx.Colour(240,240,240)
+  DEF   = wx.Colour(200, 200, 255)
+  VCC   = wx.Colour(255, 0, 0)
+  GND   = wx.Colour(10, 10, 10)
+  IO    = wx.Colour(240, 240, 240)
   JTAG  = wx.Colour(255, 204, 102)
-  OTH   = wx.Colour(150,150,220)
+  OTH   = wx.Colour(150, 150, 220)
   NC    = wx.Colour(255, 255, 255)
-  IO_1  = wx.Colour(200,0 , 0)
-  IO_0  = wx.Colour(255,255,255)
+  IO_1  = wx.Colour(200, 0 , 0)
+  IO_0  = wx.Colour(255, 255, 255)
   IO_Z  = wx.Colour(128, 128, 128)
+  OUT   = wx.Colour(26, 33, 171)
 
 # General Logic class to inherit from
 class Logic:

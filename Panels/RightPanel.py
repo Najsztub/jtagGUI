@@ -96,7 +96,7 @@ class RightPanel(wx.Panel):
     # Skip if no pins present
     if self.dev is None or self.dev.pins is None: return
 
-    dc.SetPen(wx.Pen(wx.Colour(200,200,255))) 
+    dc.SetPen(wx.Pen(PinColour.DEF.value)) 
     dc.SetBrush(wx.Brush(wx.Colour(0,255,0), wx.TRANSPARENT)) 
     
     # Get device package and draw appropriate pins
@@ -104,7 +104,7 @@ class RightPanel(wx.Panel):
     if self.pkg == 'BGA': self.plotBGA(dc)
     else: self.plotTQFP(dc)
 
-  def plotPin(self, dc, pin, pt, width):
+  def plotPin(self, dc, pin, pin_loc, width):
     # Set fill colour depending on Pin name
     pin_color = PinColour.OTH
     port_name = pin.port.name
@@ -113,11 +113,11 @@ class RightPanel(wx.Panel):
     elif port_name[0:2].upper() == 'IO':  pin_color = PinColour.IO
     elif port_name.upper() == 'MISSING':  pin_color = PinColour.NC
     elif port_name[0:3].upper() in ['TDI', 'TDO', 'TCK', 'TMS', 'TRST']:  pin_color = PinColour.JTAG
-    dc.SetPen(wx.Pen(wx.Colour(200,200,255))) 
+    dc.SetPen(wx.Pen(PinColour.DEF.value)) 
     dc.SetBrush(wx.Brush(pin_color.value, wx.BRUSHSTYLE_SOLID))
 
     # Plot pin square
-    dc.DrawRectangle(pt[0], pt[1], width, width) 
+    dc.DrawRectangle(pin_loc[0], pin_loc[1], width, width) 
 
     # Draw value to write if pin setting is enabled
     if pin.port.is_set:
@@ -126,9 +126,9 @@ class RightPanel(wx.Panel):
       elif pin.write == '1': 
         dc.SetBrush(wx.Brush(PinColour.IO_1.value, wx.BRUSHSTYLE_SOLID))
       dc.DrawPolygon([
-        (pt[0], pt[1]),
-        (pt[0] + width, pt[1] + width),
-        (pt[0] + width, pt[1])
+        (pin_loc[0], pin_loc[1]),
+        (pin_loc[0] + width, pin_loc[1] + width),
+        (pin_loc[0] + width, pin_loc[1])
       ])
 
     # Draw state if value present, else return
@@ -142,14 +142,14 @@ class RightPanel(wx.Panel):
 
     # Include pin type in the picture
     if pin.port.type in ['out']:
-      dc.SetPen(wx.Pen(wx.Colour(26, 33, 171), 1, wx.SOLID))
-    dc.DrawCircle((pt[0] + 0.5 * width), (pt[1] + 0.5 * width), (0.3 * width))
+      dc.SetPen(wx.Pen(PinColour.OUT.value, 1, wx.SOLID))
+    dc.DrawCircle((pin_loc[0] + 0.5 * width), (pin_loc[1] + 0.5 * width), (0.3 * width))
   
   def plotTQFP(self, dc):
     side = math.ceil((self.npins) / 4)
     pt_dir = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     rec_b = min(self.imgx, self.imgy) * .8 / side
-    pin_w = int(rec_b/2)*2
+    pin_width_int = int(rec_b/2)*2
     border = min(self.imgx, self.imgy) * 0.1
     coord = [math.ceil(border), math.ceil(border)]
     # Set font
@@ -169,39 +169,39 @@ class RightPanel(wx.Panel):
       loc_dir = pt_dir[border_number]
       # Search for item based on on pin nr
       try:
-        it = self.dev.pins[str(i+1)]
+        current_pin = self.dev.pins[str(i+1)]
       except KeyError:
-        it = self.EMPTY_PIN
+        current_pin = self.EMPTY_PIN
       # Draw rectangles for pins
       # Move pins 1 unit, so they do not overlap in corners
       if (border_number == 1):
         # Bottom
-        pt = [(coord[0] + rec_b), (coord[1])]
-        dc.DrawText(str(i+1), pt[0], (pt[1]+rec_b))
+        pin_loc = [(coord[0] + rec_b), (coord[1])]
+        dc.DrawText(str(i+1), pin_loc[0], (pin_loc[1]+rec_b))
       elif (border_number == 2):
         # Right
-        pt = [(coord[0] + rec_b), (coord[1] - rec_b)]
-        dc.DrawText(str(i+1), pt[0] + rec_b, (pt[1]))
+        pin_loc = [(coord[0] + rec_b), (coord[1] - rec_b)]
+        dc.DrawText(str(i+1), pin_loc[0] + rec_b, (pin_loc[1]))
       elif (border_number == 3):
         # Top
-        pt = [(coord[0]), (coord[1] - rec_b)]
-        dc.DrawText(str(i+1), pt[0], (pt[1] - rec_b))
+        pin_loc = [(coord[0]), (coord[1] - rec_b)]
+        dc.DrawText(str(i+1), pin_loc[0], (pin_loc[1] - rec_b))
       else:
         # Left
-        pt = [(coord[0]), (coord[1])]
-        dc.DrawText(str(i+1), pt[0] - rec_b, (pt[1]))
+        pin_loc = [(coord[0]), (coord[1])]
+        dc.DrawText(str(i+1), pin_loc[0] - rec_b, (pin_loc[1]))
       
       # Increment coords
       coord[0] += rec_b * loc_dir[0]
       coord[1] += rec_b * loc_dir[1]
       
       # Draw pin
-      self.plotPin(dc, it, pt, pin_w)
+      self.plotPin(dc, current_pin, pin_loc, pin_width_int)
 
   def plotBGA(self, dc):
     side = math.ceil(math.sqrt(self.npins))
     rec_b = min(self.imgx, self.imgy) * .8 / side
-    pin_w = int(rec_b/2)*2
+    pin_width_int = int(rec_b/2)*2
     border = min(self.imgx, self.imgy) * 0.1
     # Set font
     font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
@@ -213,14 +213,13 @@ class RightPanel(wx.Panel):
         # Col pin nr
         if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), int(border - rec_b))
         try:
-          it = self.dev.pins[self.bga_rows[i] + str(j+1)]
+          current_pin = self.dev.pins[self.bga_rows[i] + str(j+1)]
         except KeyError:
-          it = self.EMPTY_PIN
+          current_pin = self.EMPTY_PIN
+        # Pin coordinates
+        pin_loc =[(border + rec_b * j), (border + rec_b* i)]
         # Draw pin
-        pt =[(border + rec_b * j),(border + rec_b* i)]
-
-        # Draw pin
-        self.plotPin(dc, it, pt, pin_w)
+        self.plotPin(dc, current_pin, pin_loc, pin_width_int)
 
   # Dragging 
   def OnLeftDown(self, e):
