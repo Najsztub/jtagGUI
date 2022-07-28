@@ -143,20 +143,20 @@ class RightPanel(wx.Panel):
     # Include pin type in the picture
     if pin.port.type in ['out']:
       dc.SetPen(wx.Pen(PinColour.OUT.value, 1, wx.SOLID))
-    dc.DrawCircle((pin_loc[0] + 0.5 * width), (pin_loc[1] + 0.5 * width), (0.3 * width))
+    dc.DrawCircle(int(pin_loc[0] + 0.5 * width), int(pin_loc[1] + 0.5 * width), int(0.3 * width))
   
   def plotTQFP(self, dc):
     side = math.ceil((self.npins) / 4)
     pt_dir = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-    rec_b = min(self.imgx, self.imgy) * .8 / side
-    pin_width_int = int(rec_b/2)*2
+    pin_width_float = min(self.imgx, self.imgy) * .8 / side
+    pin_width_int = int(pin_width_float/2)*2
     border = min(self.imgx, self.imgy) * 0.1
     coord = [math.ceil(border), math.ceil(border)]
     # Set font
     if self.npins < 100:
-      font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+      font = wx.Font(math.floor(pin_width_float*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
     else:
-      font = wx.Font(math.floor(rec_b*0.33), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+      font = wx.Font(math.floor(pin_width_float*0.33), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
     dc.SetFont(font) 
     # Draw pins in loop 
     for i in range(self.npins):
@@ -176,48 +176,48 @@ class RightPanel(wx.Panel):
       # Move pins 1 unit, so they do not overlap in corners
       if (border_number == 1):
         # Bottom
-        pin_loc = [(coord[0] + rec_b), (coord[1])]
-        dc.DrawText(str(i+1), pin_loc[0], (pin_loc[1]+rec_b))
+        pin_loc = [int(coord[0] + pin_width_float), int(coord[1])]
+        dc.DrawText(str(i+1), int(pin_loc[0]), int(pin_loc[1]+pin_width_float))
       elif (border_number == 2):
         # Right
-        pin_loc = [(coord[0] + rec_b), (coord[1] - rec_b)]
-        dc.DrawText(str(i+1), pin_loc[0] + rec_b, (pin_loc[1]))
+        pin_loc = [int(coord[0] + pin_width_float), int(coord[1] - pin_width_float)]
+        dc.DrawText(str(i+1), int(pin_loc[0] + pin_width_float), int(pin_loc[1]))
       elif (border_number == 3):
         # Top
-        pin_loc = [(coord[0]), (coord[1] - rec_b)]
-        dc.DrawText(str(i+1), pin_loc[0], (pin_loc[1] - rec_b))
+        pin_loc = [int(coord[0]), int(coord[1] - pin_width_float)]
+        dc.DrawText(str(i+1), int(pin_loc[0]), int(pin_loc[1] - pin_width_float))
       else:
         # Left
-        pin_loc = [(coord[0]), (coord[1])]
-        dc.DrawText(str(i+1), pin_loc[0] - rec_b, (pin_loc[1]))
+        pin_loc = [int(coord[0]), int(coord[1])]
+        dc.DrawText(str(i+1), int(pin_loc[0] - pin_width_float), int(pin_loc[1]))
       
       # Increment coords
-      coord[0] += rec_b * loc_dir[0]
-      coord[1] += rec_b * loc_dir[1]
+      coord[0] += pin_width_float * loc_dir[0]
+      coord[1] += pin_width_float * loc_dir[1]
       
       # Draw pin
       self.plotPin(dc, current_pin, pin_loc, pin_width_int)
 
   def plotBGA(self, dc):
     side = math.ceil(math.sqrt(self.npins))
-    rec_b = min(self.imgx, self.imgy) * .8 / side
-    pin_width_int = int(rec_b/2)*2
+    pin_width_float = min(self.imgx, self.imgy) * .8 / side
+    pin_width_int = int(pin_width_float/2)*2
     border = min(self.imgx, self.imgy) * 0.1
     # Set font
-    font = wx.Font(math.floor(rec_b*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+    font = wx.Font(math.floor(pin_width_float*0.5), wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
     dc.SetFont(font) 
     for i in range(side):
       # Row pin nr
-      dc.DrawText(self.bga_rows[i], int(border - rec_b), math.ceil(rec_b * i + border))
+      dc.DrawText(self.bga_rows[i], int(border - pin_width_float), math.ceil(pin_width_float * i + border))
       for j in range(side):
         # Col pin nr
-        if i == 0: dc.DrawText(str(j+1), math.ceil(rec_b * j + border), int(border - rec_b))
-        try:
+        if i == 0: dc.DrawText(str(j+1), math.ceil(pin_width_float * j + border), int(border - pin_width_float))
+        if self.bga_rows[i] + str(j+1) in self.dev.pins.keys():
           current_pin = self.dev.pins[self.bga_rows[i] + str(j+1)]
-        except KeyError:
+        else:
           current_pin = self.EMPTY_PIN
         # Pin coordinates
-        pin_loc =[(border + rec_b * j), (border + rec_b* i)]
+        pin_loc =[int(border + pin_width_float * j), int(border + pin_width_float* i)]
         # Draw pin
         self.plotPin(dc, current_pin, pin_loc, pin_width_int)
 
