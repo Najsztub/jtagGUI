@@ -1,6 +1,5 @@
 # BSDL parser class based on TaTsu
 import tatsu
-from tatsu.model import ModelBuilderSemantics
 
 class BsdlSemantics:
   def __init__(self, model):

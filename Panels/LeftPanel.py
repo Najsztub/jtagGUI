@@ -1,4 +1,3 @@
-import wx
 import wx.lib.mixins.listctrl as listmix
 from Panels import panels, PinSetup
 
