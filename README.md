@@ -25,6 +25,8 @@ I used it together with a STM32 USBBlaster clone (e.g. [DirtyJTAG](https://githu
 
 Device discovery is based on BSDL files that are parsed and saved in local SQLite DB. They can be added and removed to the repository accessible in the `Tools` menu.
 
+**WARNING:** To add custom `.bsdl` files, older `Tatsu` version has to be used: `pip install tatsu==5.6.1`.
+
 ### Viewing and setting pins
 
 By default the instruction register (IR) is set to BYPASS. If you want to view and set the pins, you should set the IR to SAMPLE.
