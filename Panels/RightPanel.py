@@ -86,7 +86,7 @@ class RightPanel(wx.Panel):
 
     dc =  wx.AutoBufferedPaintDC(self)
 
-    dc.SetDeviceOrigin(self.origin[0], self.origin[1])
+    dc.SetDeviceOrigin(int(self.origin[0]), int(self.origin[1]))
     dc.SetUserScale(self.scale, self.scale)
 
     brush = wx.Brush("white")  

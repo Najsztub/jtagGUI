@@ -220,7 +220,9 @@ class LeftPanel ( wx.Panel ):
         self.m_chain = wx.dataview.TreeListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.dataview.TL_DEFAULT_STYLE|wx.dataview.TL_MULTIPLE )
         self.m_chain.SetMinSize( wx.Size( 80,-1 ) )
 
-        self.m_chain.AppendColumn( u"Properties", int(size[0] / 2), wx.ALIGN_LEFT, wx.COL_RESIZABLE )
+
+        self.m_chain.AppendColumn( u"Properties", round(size[0] / 2), wx.ALIGN_LEFT, wx.COL_RESIZABLE )
+
         self.m_chain.AppendColumn( u"*", 24, wx.ALIGN_LEFT, 0 )
         self.m_chain.AppendColumn( u"Values", wx.COL_WIDTH_DEFAULT, wx.ALIGN_LEFT, wx.COL_RESIZABLE )
 
