@@ -123,7 +123,7 @@ class Mywin(panels.MainFrame):
     try:
       self.log("Reading '%s'." % pathname)
       self.loadBSDL(pathname)
-    except IOError:
+    except OSError:
       wx.LogError("Cannot open file '%s'." % pathname)
       self.log("Cannot open file '%s'." % pathname)
     openFileDialog.Destroy()
@@ -131,20 +131,20 @@ class Mywin(panels.MainFrame):
   def loadBSDL(self, file):
     # Parse BSDL file
     # Compile BSDL parser if not initialized
-    if not self.parent.parser.initialized:
-      self.parent.log("Initializing BSDL parser. Might take about a minute.")
-      self.parent.parser.initialize()
-      self.parent.log("DONE Initializing BSDL parser.")
+    if not self.parser.initialized:
+      self.log("Initializing BSDL parser. Might take about a minute.")
+      self.parser.initialize()
+      self.log("DONE Initializing BSDL parser.")
     try:
-      self.parent.log("Try parsing BSDL file.")
+      self.log("Try parsing BSDL file.")
       ast = self.parser.parseBSDL(file)
-      self.parent.log("Parsing DONE.")
+      self.log("Parsing DONE.")
       dev = DUT(ast)
       # self.addDev(dev)
       self.m_statusBar1.SetStatusText(file, 1) 
     except tatsu.exceptions.FailedToken as ex:
-      self.parent.log(f"BSDL error parsing {file}")
-      self.parent.log(ex)
+      self.log(f"BSDL error parsing {file}")
+      self.log(ex)
 
   def selectDev(self, devid):
     # Select device in main window

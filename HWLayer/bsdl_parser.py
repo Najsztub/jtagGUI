@@ -17,7 +17,8 @@ class Parser:
   def __init__(self, ebnf_file):
 
     self.ebnf_file = ebnf_file
-    self.grammar = open(ebnf_file).read()
+    with open(ebnf_file) as f:
+      self.grammar = f.read()
     self.initialized = False
 
   def initialize(self):
@@ -28,6 +29,7 @@ class Parser:
   def parseBSDL(self, bsdl_file):
     if not self.initialized:
       self.initialize()
-    bsdl_def = open(bsdl_file).read()
+    with open(bsdl_file) as f:
+      bsdl_def = f.read()
     return self.bsdl_model.parse(bsdl_def, "bsdl_description", semantics=BsdlSemantics(self.bsdl_model), parseinfo=False, ignorecase=True)
 

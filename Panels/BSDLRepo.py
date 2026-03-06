@@ -35,7 +35,7 @@ class BSDLRepo(panels.BSDLRepo):
     try:
       self.parent.log("Try parsing BSDL file.")
       ast = self.parent.parser.parseBSDL(pathname)
-    except IOError:
+    except OSError:
       wx.LogError("Cannot open file '%s'." % pathname)
       self.parent.log("Cannot open file '%s'." % pathname)
     except tatsu.exceptions.FailedToken as ex:

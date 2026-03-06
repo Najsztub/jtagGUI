@@ -82,7 +82,7 @@ class Port(Logic):
 
   @read.setter
   def read(self, value):
-    if self.in_cell is None: pass
+    if self.in_cell is None: return
     self.is_set = True
     self.in_cell.bsr_in = value
 
@@ -93,7 +93,7 @@ class Port(Logic):
 
   @write.setter
   def write(self, value):
-    if self.out_cell is None: pass
+    if self.out_cell is None: return
     self.is_set = True
     self.out_cell.bsr_out = value
 
